@@ -1,26 +1,94 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --plum: #2D1B69;
+  --plum-mid: #3D2A85;
+  --plum-deep: #1C1044;
+  --plum-light: #5B45A8;
+  --plum-50: #EEE9FF;
+  --plum-100: #C8BEFF;
+  --tang: #FF7940;
+  --tang-50: #FFF0EA;
+  --tang-100: #FFD0BA;
+  --gold: #F5C842;
+  --gold-50: #FFFBEA;
+  --sage: #3AA876;
+  --sage-50: #E6F7EE;
+  --ink: #0A0714;
+  --cream: #FAFAF7;
+  --cream-mid: #F3F0E8;
+  --cream-deep: #E8E3D8;
+  --white: #FFFFFF;
+  --g100: #EAE8F0;
+  --g200: #D4D0E0;
+  --g400: #9E99B2;
+  --g600: #6B6580;
+  --g800: #3D3852;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sora), system-ui, sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display {
+  font-family: var(--font-serif), Georgia, serif;
+}
+
+/* ── Entrance animations ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-fade-in {
+  animation: fadeIn 0.5s ease both;
+}
+.animate-scale-in {
+  animation: scaleIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-slide-right {
+  animation: slideRight 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* stagger helpers */
+.delay-100 { animation-delay: 0.10s; }
+.delay-200 { animation-delay: 0.20s; }
+.delay-300 { animation-delay: 0.30s; }
+.delay-400 { animation-delay: 0.40s; }
+.delay-500 { animation-delay: 0.50s; }
+.delay-600 { animation-delay: 0.60s; }
+.delay-700 { animation-delay: 0.70s; }
+
+/* Step transition */
+@keyframes stepEnter {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes stepExit {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-24px); }
+}
+.step-enter {
+  animation: stepEnter 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.step-exit {
+  animation: stepExit 0.25s ease both;
 }

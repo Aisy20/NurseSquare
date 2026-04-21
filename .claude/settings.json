@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cp \"/Users/lika/.claude/projects/-Users-lika-Desktop-NurseSquare/7ceee369-cd91-4aa0-9588-3d4c5fa54ad5/tool-results/webfetch-1776705090275-34g049.bin\" /tmp/design.gz)",
+      "Bash(gunzip -f /tmp/design.gz)"
+    ]
+  }
+}
