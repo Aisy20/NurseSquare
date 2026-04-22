@@ -51,7 +51,7 @@ export default async function ApplicantsPage() {
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         <Link href="/hospital/dashboard"
           className="inline-flex items-center gap-1.5 text-sm font-medium no-underline mb-6 transition-opacity hover:opacity-70"
-          style={{ color: 'var(--plum)' }}>
+          style={{ color: 'var(--tang-mid)' }}>
           ← Dashboard
         </Link>
         <h1 className="text-2xl font-bold text-gray-900 mb-8">Applicant Management</h1>

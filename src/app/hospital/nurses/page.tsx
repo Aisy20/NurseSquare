@@ -87,7 +87,7 @@ export default async function BrowseNursesPage({
           </select>
           <button type="submit"
             className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:-translate-y-px"
-            style={{ background: 'var(--plum)' }}>
+            style={{ background: 'var(--tang)' }}>
             Filter
           </button>
         </form>
@@ -99,7 +99,7 @@ export default async function BrowseNursesPage({
                 style={{ background: 'white', borderColor: 'var(--g100)' }}>
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg"
-                    style={{ background: 'var(--plum-50)', color: 'var(--plum)' }}>
+                    style={{ background: 'var(--tang-50)', color: 'var(--tang-mid)' }}>
                     {nurse.full_name?.charAt(0)}
                   </div>
                   <div className="flex flex-col items-end gap-1">
@@ -109,8 +109,8 @@ export default async function BrowseNursesPage({
                     )}
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
                       style={{
-                        background: nurse.availability === 'available' ? 'var(--sage-50)' : 'var(--plum-50)',
-                        color: nurse.availability === 'available' ? 'var(--sage)' : 'var(--plum)',
+                        background: nurse.availability === 'available' ? 'var(--sage-50)' : 'var(--tang-50)',
+                        color: nurse.availability === 'available' ? 'var(--sage)' : 'var(--tang)',
                       }}>
                       {nurse.availability?.replace('_', ' ')}
                     </span>
@@ -127,7 +127,7 @@ export default async function BrowseNursesPage({
                     </span>
                   )}
                   {nurse.background_check_status === 'passed' && (
-                    <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--plum)' }}>
+                    <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--tang-mid)' }}>
                       <Shield className="w-3 h-3" /> BGC Passed
                     </span>
                   )}
@@ -153,7 +153,7 @@ export default async function BrowseNursesPage({
                   {user && userRole === 'hospital' ? (
                     <Link href={`/hospital/nurses/${nurse.id}`}
                       className="text-sm font-bold no-underline flex items-center gap-1"
-                      style={{ color: 'var(--plum)' }}>
+                      style={{ color: 'var(--tang-mid)' }}>
                       View Profile <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   ) : (
@@ -179,7 +179,7 @@ export default async function BrowseNursesPage({
         {!user && (
           <div className="mt-10 rounded-2xl p-8 text-center" style={{ background: 'var(--plum-deep)' }}>
             <p className="font-display text-2xl text-white mb-2">Ready to hire?</p>
-            <p className="text-sm mb-5" style={{ color: 'var(--plum-100)' }}>Create a free employer account to view full profiles and reach out directly.</p>
+            <p className="text-sm mb-5" style={{ color: 'var(--tang-100)' }}>Create a free employer account to view full profiles and reach out directly.</p>
             <Link href="/auth/register/hospital"
               className="inline-flex items-center gap-2 font-bold px-7 py-3 rounded-[14px] text-white no-underline"
               style={{ background: 'var(--tang)' }}>

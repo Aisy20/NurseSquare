@@ -99,7 +99,7 @@ export default function HospitalProfilePage() {
       <main className="flex-1 max-w-2xl mx-auto px-4 sm:px-6 py-8 w-full">
         <button onClick={() => router.push('/hospital/dashboard')}
           className="inline-flex items-center gap-1.5 text-sm font-medium mb-6 transition-opacity hover:opacity-70"
-          style={{ color: 'var(--plum)' }}>
+          style={{ color: 'var(--tang-mid)' }}>
           ← Dashboard
         </button>
         <div className="mb-8">

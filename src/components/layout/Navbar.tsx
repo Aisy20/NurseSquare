@@ -12,25 +12,44 @@ interface NavbarProps {
   userName?: string | null
 }
 
-function LogoMark({ size = 34 }: { size?: number }) {
+function LogoMark({ size = 34, square, dot }: { size?: number; square: string; dot: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 44 44" fill="none">
-      <rect width="44" height="44" rx="12" fill="#2D1B69"/>
+      <rect width="44" height="44" rx="12" fill={square}/>
       <rect x="8" y="9" width="8" height="26" rx="4" fill="white"/>
       <rect x="28" y="9" width="8" height="26" rx="4" fill="white"/>
       <path d="M11 32 L33 12" stroke="white" strokeWidth="8" strokeLinecap="round"/>
-      <circle cx="36" cy="10" r="5" fill="#FF7940"/>
+      <circle cx="36" cy="10" r="5" fill={dot}/>
     </svg>
   )
 }
 
-export function Logo({ inv = false }: { inv?: boolean }) {
+export function Logo({ inv = false, variant = 'nurse' }: { inv?: boolean; variant?: 'nurse' | 'hospital' }) {
+  // Mark and text colors per (variant, inv) — pair is always mark + opposite-color dot.
+  let mark = { square: '#2D1B69', dot: '#FF7940' } // nurse default: plum + tang dot
+  let textMain = 'var(--ink)'
+  let textAccent = 'var(--plum)'
+
+  if (variant === 'hospital' && !inv) {
+    mark = { square: '#FF7940', dot: '#2D1B69' } // tang + plum dot
+    textAccent = 'var(--tang-mid)'
+  } else if (variant === 'hospital' && inv) {
+    // Sidebar bg is bright tang — need dark mark so it shows
+    mark = { square: '#1C1044', dot: '#FF7940' } // plum-deep + tang dot
+    textMain = 'var(--plum-deep)'
+    textAccent = 'var(--plum-deep)'
+  } else if (variant === 'nurse' && inv) {
+    // Sidebar bg is plum-deep — default mark already contrasts fine
+    textMain = 'white'
+    textAccent = 'var(--tang)'
+  }
+
   return (
     <Link href="/" className="flex items-center gap-2.5 no-underline">
-      <LogoMark />
+      <LogoMark square={mark.square} dot={mark.dot} />
       <span className="text-[17px] font-bold tracking-tight"
-        style={{ color: inv ? 'white' : 'var(--ink)', fontFamily: 'var(--font-sora)', letterSpacing: '-0.4px' }}>
-        Nurse<span style={{ color: inv ? 'var(--tang)' : 'var(--plum)' }}>Square</span>
+        style={{ color: textMain, fontFamily: 'var(--font-sora)', letterSpacing: '-0.4px' }}>
+        Nurse<span style={{ color: textAccent }}>Square</span>
       </span>
     </Link>
   )

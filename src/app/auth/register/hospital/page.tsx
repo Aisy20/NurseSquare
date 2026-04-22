@@ -94,32 +94,29 @@ export default function HospitalRegisterPage() {
     <div className="min-h-screen flex" style={{ background: 'var(--cream)' }}>
       {/* Brand sidebar */}
       <div className="hidden lg:flex lg:w-[380px] flex-col justify-between p-12"
-        style={{ background: 'var(--plum-deep)' }}>
-        <Logo inv />
+        style={{ background: '#FFA574' }}>
+        <Logo inv variant="hospital" />
         <div>
-          <p className="font-display text-[28px] leading-snug text-white mb-3">
+          <p className="font-display text-[28px] leading-snug mb-6" style={{ color: 'var(--plum-deep)' }}>
             Hire direct.<br />No markup.
-          </p>
-          <p className="text-sm mb-6" style={{ color: 'var(--plum-100)' }}>
-            Access 2,400+ verified nurses. Pay 15% — not the 25–40% agencies charge.
           </p>
           <div className="space-y-3">
             {['Every nurse is license-verified', 'Checkr background checks', 'Escrow-protected placement'].map(item => (
-              <div key={item} className="flex items-center gap-2 text-sm" style={{ color: 'var(--g400)' }}>
-                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--tang)' }}></span>
+              <div key={item} className="flex items-center gap-2 text-sm" style={{ color: 'var(--plum-deep)', opacity: 0.82 }}>
+                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--plum-deep)' }}></span>
                 {item}
               </div>
             ))}
           </div>
         </div>
-        <p className="text-xs" style={{ color: 'var(--g400)' }}>© {new Date().getFullYear()} NurseSquare</p>
+        <p className="text-xs" style={{ color: 'var(--plum-deep)', opacity: 0.55 }}>© {new Date().getFullYear()} NurseSquare</p>
       </div>
 
       {/* Form panel */}
       <div className="flex-1 flex items-start justify-center px-4 py-12 overflow-y-auto">
         <div className="w-full max-w-lg">
           <div className="lg:hidden mb-8 flex justify-center">
-            <Logo />
+            <Logo variant="hospital" />
           </div>
 
           <h1 className="font-display text-[28px] mb-1" style={{ color: 'var(--ink)' }}>Create your employer account</h1>
@@ -137,7 +134,7 @@ export default function HospitalRegisterPage() {
                     }}>
                     {s.n}
                   </div>
-                  <span className="text-sm font-medium" style={{ color: step >= s.n ? 'var(--tang)' : 'var(--g400)' }}>
+                  <span className="text-sm font-medium" style={{ color: step >= s.n ? 'var(--tang-mid)' : 'var(--g400)' }}>
                     {s.label}
                   </span>
                 </div>
@@ -265,9 +262,9 @@ export default function HospitalRegisterPage() {
 
                 <p className="text-xs text-center" style={{ color: 'var(--g400)' }}>
                   By creating an account you agree to our{' '}
-                  <Link href="/terms" className="no-underline" style={{ color: 'var(--plum)' }}>Terms</Link>
+                  <Link href="/terms" className="no-underline" style={{ color: 'var(--tang-mid)' }}>Terms</Link>
                   {' '}and{' '}
-                  <Link href="/privacy" className="no-underline" style={{ color: 'var(--plum)' }}>Privacy Policy</Link>.
+                  <Link href="/privacy" className="no-underline" style={{ color: 'var(--tang-mid)' }}>Privacy Policy</Link>.
                   A 15% placement fee applies per successful hire.
                 </p>
               </form>
@@ -276,7 +273,7 @@ export default function HospitalRegisterPage() {
 
           <p className="text-center text-sm mt-6" style={{ color: 'var(--g600)' }}>
             Already have an account?{' '}
-            <Link href="/auth/login" className="font-semibold no-underline" style={{ color: 'var(--plum)' }}>
+            <Link href="/auth/login" className="font-semibold no-underline" style={{ color: 'var(--tang-mid)' }}>
               Sign in
             </Link>
           </p>

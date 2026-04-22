@@ -109,7 +109,7 @@ export default function ApplicationDetailPage() {
       <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         <Link href="/hospital/applicants"
           className="inline-flex items-center gap-1.5 text-sm font-medium no-underline mb-6 transition-opacity hover:opacity-70"
-          style={{ color: 'var(--plum)' }}>
+          style={{ color: 'var(--tang-mid)' }}>
           ← Back to applicants
         </Link>
 
