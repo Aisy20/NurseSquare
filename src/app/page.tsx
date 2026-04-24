@@ -46,9 +46,8 @@ export default async function LandingPage() {
 
             <h1 className="animate-fade-up delay-100 font-display text-[62px] md:text-[72px] leading-[1.02] tracking-[-0.5px] mb-7"
               style={{ color: 'var(--ink)' }}>
-              Healthcare staffing<br />
-              <em className="italic" style={{ color: 'var(--plum)' }}>without the</em><br />
-              <span style={{ color: 'var(--tang)' }}>middleman.</span>
+              Direct nurse hiring,<br />
+              <span style={{ color: 'var(--tang)' }}>no middleman.</span>
             </h1>
 
             <p className="animate-fade-up delay-200 text-[17px] leading-[1.82] mb-10 max-w-[480px]" style={{ color: 'var(--g600)' }}>

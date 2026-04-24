@@ -16,9 +16,9 @@ const sora = Sora({
 })
 
 export const metadata: Metadata = {
-  title: 'NurseSquare — Healthcare Staffing, Direct',
-  description: 'Healthcare staffing without the middleman. Nurses keep more of every dollar. Hospitals fill roles for less.',
-  keywords: 'travel nurse, nursing jobs, hospital staffing, 1099 nurse',
+  title: 'NurseSquare — Direct Nurse Hiring',
+  description: 'Direct nurse hiring, no middleman. Nurses keep more of every dollar. Hospitals fill roles for less.',
+  keywords: 'travel nurse, nursing jobs, hospital hiring, 1099 nurse',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

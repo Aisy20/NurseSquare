@@ -31,7 +31,7 @@ export default async function AboutPage() {
               Our story
             </div>
             <h1 className="font-display text-[52px] md:text-[64px] leading-[1.02] mb-6 text-white">
-              Healthcare staffing<br />
+              Direct nurse hiring,<br />
               <em className="italic" style={{ color: 'var(--tang)' }}>done right.</em>
             </h1>
             <p className="text-[18px] leading-[1.78] max-w-xl" style={{ color: 'var(--plum-100)' }}>
@@ -176,8 +176,8 @@ export default async function AboutPage() {
               Join as a nurse <ArrowRight className="w-4 h-4" />
             </Link>
             <Link href="/auth/register/hospital"
-              className="inline-flex items-center gap-2 font-bold text-[15px] px-7 py-3.5 rounded-[14px] transition-all no-underline"
-              style={{ background: 'var(--tang-50)', color: 'var(--tang)', border: '1.5px solid var(--tang-100)' }}>
+              className="inline-flex items-center gap-2 font-bold text-[15px] px-7 py-3.5 rounded-[14px] text-white transition-all hover:-translate-y-px no-underline"
+              style={{ background: 'var(--tang)', boxShadow: '0 8px 24px rgba(255,121,64,0.32)' }}>
               I&apos;m hiring
             </Link>
           </div>

@@ -308,6 +308,79 @@ CREATE POLICY "Nurses with placement can view checklist" ON onboarding_checklist
   );
 
 -- ============================================================
+-- NURSYS VERIFICATION FIELDS (added post-initial-schema)
+-- Run these ALTER statements in your Supabase SQL editor:
+-- ============================================================
+ALTER TABLE nurse_profiles
+  ADD COLUMN IF NOT EXISTS address1 TEXT,
+  ADD COLUMN IF NOT EXISTS address2 TEXT,
+  ADD COLUMN IF NOT EXISTS ssn_last_four TEXT,
+  ADD COLUMN IF NOT EXISTS birth_year INTEGER,
+  ADD COLUMN IF NOT EXISTS practice_setting TEXT,
+  ADD COLUMN IF NOT EXISTS ncsbn_id TEXT,
+  ADD COLUMN IF NOT EXISTS nursys_transaction_id TEXT,
+  ADD COLUMN IF NOT EXISTS nursys_lookup_transaction_id TEXT,
+  ADD COLUMN IF NOT EXISTS nursys_enrolled_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS license_verified_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS license_status_detail JSONB;
+
+-- ============================================================
+-- MESSAGES (scoped to an application thread)
+-- ============================================================
+CREATE TABLE messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  application_id UUID NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+  sender_id UUID NOT NULL REFERENCES auth.users(id),
+  body TEXT NOT NULL,
+  read_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX messages_application_idx ON messages(application_id);
+CREATE INDEX messages_sender_idx ON messages(sender_id);
+CREATE INDEX messages_created_idx ON messages(created_at DESC);
+
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Application parties can read messages" ON messages
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM applications a
+      JOIN nurse_profiles np ON np.id = a.nurse_id
+      JOIN job_postings jp ON jp.id = a.job_id
+      JOIN employer_profiles ep ON ep.id = jp.employer_id
+      WHERE a.id = application_id
+        AND (np.user_id = auth.uid() OR ep.user_id = auth.uid())
+    )
+  );
+
+CREATE POLICY "Application parties can send messages" ON messages
+  FOR INSERT WITH CHECK (
+    sender_id = auth.uid() AND
+    EXISTS (
+      SELECT 1 FROM applications a
+      JOIN nurse_profiles np ON np.id = a.nurse_id
+      JOIN job_postings jp ON jp.id = a.job_id
+      JOIN employer_profiles ep ON ep.id = jp.employer_id
+      WHERE a.id = application_id
+        AND (np.user_id = auth.uid() OR ep.user_id = auth.uid())
+    )
+  );
+
+CREATE POLICY "Recipients can mark messages read" ON messages
+  FOR UPDATE USING (
+    sender_id != auth.uid() AND
+    EXISTS (
+      SELECT 1 FROM applications a
+      JOIN nurse_profiles np ON np.id = a.nurse_id
+      JOIN job_postings jp ON jp.id = a.job_id
+      JOIN employer_profiles ep ON ep.id = jp.employer_id
+      WHERE a.id = application_id
+        AND (np.user_id = auth.uid() OR ep.user_id = auth.uid())
+    )
+  );
+
+-- ============================================================
 -- TRIGGERS: updated_at
 -- ============================================================
 CREATE OR REPLACE FUNCTION update_updated_at()

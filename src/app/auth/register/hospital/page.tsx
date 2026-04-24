@@ -87,6 +87,12 @@ export default function HospitalRegisterPage() {
       return
     }
 
+    fetch('/api/emails/welcome', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: form.email, role: 'hospital', name: form.orgName }),
+    }).catch(() => {})
+
     router.push('/hospital/dashboard?welcome=true')
   }
 
@@ -120,7 +126,7 @@ export default function HospitalRegisterPage() {
           </div>
 
           <h1 className="font-display text-[28px] mb-1" style={{ color: 'var(--ink)' }}>Create your employer account</h1>
-          <p className="text-sm mb-7" style={{ color: 'var(--g600)' }}>Start hiring verified travel nurses at 15%</p>
+          <p className="text-sm mb-7" style={{ color: 'var(--g600)' }}>Start hiring verified travel nurses directly.</p>
 
           {/* Step indicator */}
           <div className="flex items-center gap-3 mb-8">
@@ -265,7 +271,6 @@ export default function HospitalRegisterPage() {
                   <Link href="/terms" className="no-underline" style={{ color: 'var(--tang-mid)' }}>Terms</Link>
                   {' '}and{' '}
                   <Link href="/privacy" className="no-underline" style={{ color: 'var(--tang-mid)' }}>Privacy Policy</Link>.
-                  A 15% placement fee applies per successful hire.
                 </p>
               </form>
             )}

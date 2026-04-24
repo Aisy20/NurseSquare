@@ -61,6 +61,10 @@ export default function JobDetailPage() {
       setApplying(false)
       return
     }
+    if (!nurseProfile.license_verified) {
+      router.push(`/nurse/verify-license?next=/nurse/jobs/${id}`)
+      return
+    }
     if (nurseProfile.background_check_status !== 'passed') {
       setError('A passed background check is required to apply.')
       setApplying(false)

@@ -159,6 +159,12 @@ export default function NurseRegisterPage() {
       return
     }
 
+    fetch('/api/emails/welcome', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: form.email, role: 'nurse', name: form.fullName }),
+    }).catch(() => {})
+
     router.push('/nurse/dashboard?welcome=true')
   }
 

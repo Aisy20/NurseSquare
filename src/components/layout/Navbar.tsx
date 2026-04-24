@@ -70,6 +70,8 @@ export default function Navbar({ userRole, userName }: NavbarProps) {
   const nurseLinks = [
     { href: '/nurse/jobs', label: 'Find Jobs' },
     { href: '/nurse/applications', label: 'My Applications' },
+    { href: '/messages', label: 'Messages' },
+    { href: '/nurse/payments', label: 'Payments' },
     { href: '/nurse/dashboard', label: 'Dashboard' },
   ]
 
@@ -77,10 +79,19 @@ export default function Navbar({ userRole, userName }: NavbarProps) {
     { href: '/hospital/nurses', label: 'Browse Nurses' },
     { href: '/hospital/post-job', label: 'Post a Job' },
     { href: '/hospital/applicants', label: 'Applicants' },
+    { href: '/messages', label: 'Messages' },
+    { href: '/hospital/billing', label: 'Billing' },
     { href: '/hospital/dashboard', label: 'Dashboard' },
   ]
 
-  const links = userRole === 'nurse' ? nurseLinks : userRole === 'hospital' ? hospitalLinks : []
+  const adminLinks = [
+    { href: '/admin', label: 'Overview' },
+    { href: '/admin/users', label: 'Users' },
+    { href: '/admin/jobs', label: 'Jobs' },
+    { href: '/admin/payments', label: 'Payments' },
+  ]
+
+  const links = userRole === 'nurse' ? nurseLinks : userRole === 'hospital' ? hospitalLinks : userRole === 'admin' ? adminLinks : []
 
   return (
     <nav className="sticky top-0 z-50 h-[68px] flex items-center px-4 sm:px-8 lg:px-12"
@@ -104,6 +115,10 @@ export default function Navbar({ userRole, userName }: NavbarProps) {
                     style={{ color: 'var(--g600)' }}>{link.label}</Link>
                 </li>
               ))}
+              <li>
+                <Link href="/about" className="px-3 py-2 rounded-lg text-[13px] font-medium no-underline transition-colors hover:text-[var(--ink)]"
+                  style={{ color: 'var(--g600)' }}>About</Link>
+              </li>
             </ul>
           )}
         </div>
@@ -138,7 +153,7 @@ export default function Navbar({ userRole, userName }: NavbarProps) {
           ) : (
             <div className="hidden sm:flex items-center gap-2">
               <Link href="/auth/login"><Button variant="ghost" size="sm">Log in</Button></Link>
-              <Link href="/auth/register"><Button variant="primary" size="sm">Get started free</Button></Link>
+              <Link href="/auth/register"><Button variant="primary" size="sm">Join NurseSquare</Button></Link>
             </div>
           )}
           <button className="md:hidden p-2" style={{ color: 'var(--ink)' }}
@@ -161,7 +176,7 @@ export default function Navbar({ userRole, userName }: NavbarProps) {
           {!userRole && (
             <div className="pt-2 flex gap-2">
               <Link href="/auth/login" className="flex-1"><Button variant="outline" size="sm" className="w-full">Log in</Button></Link>
-              <Link href="/auth/register" className="flex-1"><Button variant="primary" size="sm" className="w-full">Get started</Button></Link>
+              <Link href="/auth/register" className="flex-1"><Button variant="primary" size="sm" className="w-full">Join NurseSquare</Button></Link>
             </div>
           )}
         </div>

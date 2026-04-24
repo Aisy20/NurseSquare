@@ -9,7 +9,7 @@ import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { Star, Shield, CheckCircle, DollarSign, AlertCircle } from 'lucide-react'
+import { Star, Shield, CheckCircle, DollarSign, AlertCircle, MessageSquare } from 'lucide-react'
 
 const STATUS_OPTIONS = ['pending', 'reviewing', 'offered', 'rejected'] as const
 
@@ -48,16 +48,18 @@ export default function ApplicationDetailPage() {
 
   async function updateStatus(newStatus: string) {
     setUpdating(true)
-    const { error: err } = await supabase
-      .from('applications')
-      .update({ status: newStatus })
-      .eq('id', id as string)
+    const res = await fetch('/api/applications/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ applicationId: id, status: newStatus }),
+    })
+    const data = await res.json()
 
-    if (!err) {
+    if (res.ok) {
       setApp((prev: any) => ({ ...prev, status: newStatus }))
-      setSuccess(`Status updated to ${newStatus}`)
+      setSuccess(`Status updated to ${newStatus}. Nurse has been notified.`)
     } else {
-      setError(err.message)
+      setError(data.error || 'Failed to update status')
     }
     setUpdating(false)
   }
@@ -241,6 +243,22 @@ export default function ApplicationDetailPage() {
                 </Button>
               </Card>
             )}
+
+            {/* Message nurse */}
+            <Card>
+              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <MessageSquare className="w-4 h-4" style={{ color: 'var(--plum)' }} />
+                Message nurse
+              </h3>
+              <p className="text-xs mb-3" style={{ color: 'var(--g600)' }}>
+                Ask questions or discuss the role directly.
+              </p>
+              <Link href={`/messages/${id}`}
+                className="block text-center w-full font-semibold text-sm py-2.5 rounded-xl text-white no-underline transition-opacity hover:opacity-90"
+                style={{ background: 'var(--plum)' }}>
+                Open conversation
+              </Link>
+            </Card>
 
             {/* Status update */}
             {app.status !== 'accepted' && (

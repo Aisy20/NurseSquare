@@ -32,7 +32,7 @@ export default function Footer() {
               </span>
             </div>
             <p className="text-sm leading-relaxed max-w-xs mb-4" style={{ color: 'var(--g400)' }}>
-              Healthcare staffing without the middleman. Nurses keep more of every dollar. Hospitals fill roles for less.
+              Direct nurse hiring, no middleman. Nurses keep more of every dollar. Hospitals fill roles for less.
             </p>
             <p className="text-xs mb-6" style={{ color: 'var(--g600)' }}>Free for nurses · Direct placement</p>
 

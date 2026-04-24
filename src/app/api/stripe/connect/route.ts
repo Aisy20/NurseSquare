@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe, calculatePlatformFee } from '@/lib/stripe'
 import { createClient } from '@/lib/supabase/server'
+import { sendEmail, emailTemplates } from '@/lib/resend'
 
 export async function POST(req: NextRequest) {
   const { applicationId } = await req.json()
@@ -72,6 +73,20 @@ export async function POST(req: NextRequest) {
       .from('job_postings')
       .update({ status: 'filled' })
       .eq('id', job.id)
+
+    const { data: nurseUser } = await supabase
+      .from('users')
+      .select('email')
+      .eq('id', application.nurse_profiles.user_id)
+      .single()
+
+    if (nurseUser?.email && process.env.RESEND_API_KEY) {
+      sendEmail({
+        to: nurseUser.email,
+        subject: `Placement confirmed: ${job.title}`,
+        html: emailTemplates.placementConfirmed(job.title, job.start_date),
+      }).catch(() => {})
+    }
 
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,

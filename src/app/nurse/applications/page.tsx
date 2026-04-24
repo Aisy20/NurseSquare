@@ -6,7 +6,7 @@ import Navbar from '@/components/layout/Navbar'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { MapPin, Clock, Briefcase } from 'lucide-react'
+import { MapPin, Clock, Briefcase, MessageSquare } from 'lucide-react'
 
 export default async function NurseApplicationsPage() {
   const supabase = await createClient()
@@ -80,6 +80,11 @@ export default async function NurseApplicationsPage() {
                           You have an offer!
                         </div>
                       )}
+                      <Link href={`/messages/${app.id}`}
+                        className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold no-underline"
+                        style={{ color: 'var(--plum)' }}>
+                        <MessageSquare className="w-3.5 h-3.5" /> Message hospital
+                      </Link>
                     </div>
                   </div>
                 </Card>

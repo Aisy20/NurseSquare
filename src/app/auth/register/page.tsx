@@ -40,7 +40,7 @@ export default function RegisterChoicePage() {
                 ))}
               </div>
               <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--plum)' }}>
-                Get started free <ArrowRight className="w-4 h-4" />
+                Join NurseSquare <ArrowRight className="w-4 h-4" />
               </div>
             </div>
           </Link>
@@ -55,11 +55,11 @@ export default function RegisterChoicePage() {
               </div>
               <h2 className="font-display text-xl mb-2" style={{ color: 'var(--ink)' }}>I&apos;m Hiring</h2>
               <p className="text-sm mb-5 leading-relaxed" style={{ color: 'var(--g600)' }}>
-                Hospitals, clinics, and agencies. Post jobs, browse verified nurses, pay just 15%.
+                Hospitals, clinics, and agencies. Post jobs and browse verified nurses directly.
               </p>
               <div className="space-y-2.5 mb-6">
                 {[
-                  '15% fee (vs 25–40% agencies)',
+                  'Direct access to verified nurses',
                   'Verified, background-checked nurses',
                   'Escrow payment protection',
                   'Automatic onboarding PDF',
