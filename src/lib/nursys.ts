@@ -1,12 +1,23 @@
-const BASE_URL = process.env.NURSYS_BASE_URL
-const USERNAME = process.env.NURSYS_API_USERNAME
-const PASSWORD = process.env.NURSYS_API_PASSWORD
+// Read env vars at call time so password rotation (see /changepassword) doesn't
+// require a process restart to pick up a new value, and so test/dev harnesses
+// that set env vars after import still work.
+function env() {
+  return {
+    BASE_URL: process.env.NURSYS_BASE_URL,
+    USERNAME: process.env.NURSYS_API_USERNAME,
+    PASSWORD: process.env.NURSYS_API_PASSWORD,
+  }
+}
+
+const REQUEST_TIMEOUT_MS = 30_000
 
 export function nursysConfigured() {
+  const { BASE_URL, USERNAME, PASSWORD } = env()
   return Boolean(BASE_URL && USERNAME && PASSWORD)
 }
 
 function authHeaders() {
+  const { USERNAME, PASSWORD } = env()
   if (!USERNAME || !PASSWORD) throw new Error('Nursys credentials missing')
   // Nursys uses custom headers, not Authorization: Basic.
   return {
@@ -18,11 +29,13 @@ function authHeaders() {
 }
 
 async function call<T = any>(path: string, init: { method: 'GET' | 'POST'; body?: unknown }): Promise<T> {
+  const { BASE_URL } = env()
   if (!BASE_URL) throw new Error('NURSYS_BASE_URL not set')
   const res = await fetch(`${BASE_URL}${path}`, {
     method: init.method,
     headers: authHeaders(),
     body: init.body ? JSON.stringify(init.body) : undefined,
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   })
   const text = await res.text()
   let data: any
@@ -352,6 +365,7 @@ export async function retrieveDocuments(documentIds: string[]) {
 // ============================================================
 
 export async function changePassword(newPassword: string) {
+  const { PASSWORD } = env()
   if (!PASSWORD) throw new Error('NURSYS_API_PASSWORD not set (required as currentPassword)')
   return call('/changepassword', {
     method: 'POST',

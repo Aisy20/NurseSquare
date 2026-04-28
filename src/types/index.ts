@@ -7,23 +7,55 @@ export interface User {
   created_at: string
 }
 
+export type LicenseType = 'RN' | 'LPN' | 'NP' | 'CRNA' | 'CNA' | 'HHA'
+
 export interface NurseProfile {
   id: string
   user_id: string
   full_name: string
+  license_type?: LicenseType | null
   license_number: string
   license_state: string
   specialty: string
   years_exp: number
   bio: string
   hourly_rate: number
+  weekly_rate?: number | null
   availability: string
+  availability_date?: string | null
+  city?: string | null
+  state?: string | null
+  zip?: string | null
   background_check_status: 'pending' | 'in_progress' | 'passed' | 'failed' | 'not_started'
+  checkr_candidate_id?: string | null
   license_verified: boolean
+  license_verified_at?: string | null
   rating_avg: number
+  rating_count?: number
   featured: boolean
   profile_photo_url?: string
+  // Nursys verification fields (see supabase/schema.sql ALTER TABLE block)
+  address1?: string | null
+  address2?: string | null
+  ssn_last_four?: string | null
+  birth_year?: number | null
+  practice_setting?: string | null
+  ncsbn_id?: string | null
+  nursys_transaction_id?: string | null
+  nursys_lookup_transaction_id?: string | null
+  nursys_enrolled_at?: string | null
+  license_status_detail?: NursysLicenseStatusDetail | null
   created_at: string
+  updated_at?: string
+}
+
+export interface NursysLicenseStatusDetail {
+  licenseStatus: string
+  active: string
+  compact: string
+  expirationDate: string | null | undefined
+  disciplineCount: number
+  authorizedStates: string[]
 }
 
 export interface EmployerProfile {

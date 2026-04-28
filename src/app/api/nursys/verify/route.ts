@@ -179,13 +179,21 @@ export async function GET(req: NextRequest) {
         })
       }
 
-      // Pick the license that matches what the nurse enrolled with.
+      // Match on the exact license the nurse enrolled with. Fail closed if there's
+      // no match — falling back to NurseLookupLicenses[0] could verify against a
+      // different state's license than the one claimed.
       const enrolled = (item.NurseLookupLicenses || []).find(l =>
         l.LicenseNumber === p.license_number && l.JurisdictionAbbreviation === p.license_state
-      ) || item.NurseLookupLicenses?.[0]
+      )
 
       if (!enrolled) {
-        return NextResponse.json({ status: 'failed', reason: 'No license records returned for this nurse' })
+        const licenseCount = item.NurseLookupLicenses?.length || 0
+        return NextResponse.json({
+          status: 'failed',
+          reason: licenseCount === 0
+            ? 'No license records returned for this nurse'
+            : `No license matching ${p.license_state}/${p.license_number} in NCSBN response (${licenseCount} other licenses found)`,
+        })
       }
 
       const validity = isLicenseCurrentlyValid(enrolled)

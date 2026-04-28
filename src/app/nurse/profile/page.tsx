@@ -18,7 +18,6 @@ export default function NurseProfilePage() {
   const supabase = createClient()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [verifying, setVerifying] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [user, setUser] = useState<any>(null)
@@ -70,7 +69,11 @@ export default function NurseProfilePage() {
     setError('')
     setSuccess('')
 
-    const { error: err } = await supabase.from('nurse_profiles').update({
+    const licenseChanged =
+      form.license_number !== (profile?.license_number || '') ||
+      form.license_state !== (profile?.license_state || '')
+
+    const update: Record<string, unknown> = {
       full_name: form.full_name,
       license_number: form.license_number,
       license_state: form.license_state,
@@ -79,41 +82,29 @@ export default function NurseProfilePage() {
       hourly_rate: parseFloat(form.hourly_rate) || 0,
       bio: form.bio,
       availability: form.availability,
-      license_verified: false,
-    }).eq('user_id', user?.id)
+    }
+    if (licenseChanged) {
+      update.license_verified = false
+      update.license_verified_at = null
+      update.nursys_lookup_transaction_id = null
+    }
+
+    const { error: err } = await supabase
+      .from('nurse_profiles')
+      .update(update)
+      .eq('user_id', user?.id)
 
     if (err) {
       setError(err.message)
     } else {
       setSuccess('Profile saved successfully!')
-      setProfile((prev: any) => ({ ...prev, ...form }))
+      setProfile((prev: any) => ({
+        ...prev,
+        ...form,
+        ...(licenseChanged ? { license_verified: false } : {}),
+      }))
     }
     setSaving(false)
-  }
-
-  async function handleVerifyLicense() {
-    setVerifying(true)
-    setError('')
-
-    const res = await fetch('/api/nursys/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        licenseNumber: form.license_number,
-        licenseState: form.license_state,
-        nurseProfileId: profile?.id,
-      }),
-    })
-
-    const data = await res.json()
-
-    if (data.verified) {
-      setSuccess('License verified successfully!')
-      setProfile((prev: any) => ({ ...prev, license_verified: true }))
-    } else {
-      setError(data.error || 'License verification failed. Please check your license number and state.')
-    }
-    setVerifying(false)
   }
 
   async function handleStartBackgroundCheck() {
@@ -218,8 +209,7 @@ export default function NurseProfilePage() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={handleVerifyLicense}
-                  loading={verifying}
+                  onClick={() => router.push('/nurse/verify-license?next=/nurse/profile')}
                   disabled={!form.license_number || !form.license_state}
                 >
                   Verify via Nursys

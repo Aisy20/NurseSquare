@@ -87,9 +87,15 @@ export async function GET(req: NextRequest) {
 
       flagged.push({ recordId: ev.RecordId, reason: triggers.join('; ') })
 
+      // Clear cached lookup so the next /api/nursys/verify GET re-runs Phase 1
+      // (Manage Nurse List → Nurse Lookup) instead of re-reading the stale result.
       await supabase
         .from('nurse_profiles')
-        .update({ license_verified: false } as never)
+        .update({
+          license_verified: false,
+          license_verified_at: null,
+          nursys_lookup_transaction_id: null,
+        } as never)
         .eq('id', ev.RecordId)
     }
 
