@@ -68,8 +68,24 @@ export async function POST(req: NextRequest) {
 
   const { HospitalPracticeSetting, HospitalPracticeSettingOther } = practiceSettingToNursys(practiceSettingLabel)
 
+  // If this nurse is already enrolled at NCSBN (has a prior transaction id
+  // or enrollment timestamp), send 'U' (Update) instead of 'A' (Add).
+  // NCSBN rejects a second 'A' for an already-enrolled identity.
+  const supabase = await createClient()
+  const { data: existing } = await supabase
+    .from('nurse_profiles')
+    .select('nursys_transaction_id, nursys_enrolled_at')
+    .eq('id', nurseProfileId)
+    .single()
+
+  const alreadyEnrolled = Boolean(
+    (existing as { nursys_transaction_id?: string | null; nursys_enrolled_at?: string | null } | null)?.nursys_transaction_id ||
+    (existing as { nursys_transaction_id?: string | null; nursys_enrolled_at?: string | null } | null)?.nursys_enrolled_at
+  )
+  const action: 'A' | 'U' = alreadyEnrolled ? 'U' : 'A'
+
   const request: ManageNurseListRequest = {
-    SubmissionActionCode: 'A',
+    SubmissionActionCode: action,
     JurisdictionAbbreviation: licenseState,
     LicenseNumber: licenseNumber || '',
     LicenseType: licenseType,
@@ -103,10 +119,15 @@ export async function POST(req: NextRequest) {
 
     // Persist Nursys-required fields + transaction id.
     // Requires the ALTER TABLE block in supabase/schema.sql.
-    const supabase = await createClient()
+    // Also write license_number/state/type from the form so Phase 2's
+    // license-match check (GET handler, line ~185) compares against the
+    // license actually submitted to NCSBN — not a stale profile value.
     await supabase
       .from('nurse_profiles')
       .update({
+        license_number: licenseNumber || null,
+        license_state: licenseState || null,
+        license_type: licenseType || null,
         address1,
         address2: address2 || null,
         ssn_last_four: lastFourSSN,
@@ -114,6 +135,9 @@ export async function POST(req: NextRequest) {
         practice_setting: practiceSettingLabel,
         ncsbn_id: ncsbnId || null,
         nursys_transaction_id: txn.TransactionId,
+        nursys_lookup_transaction_id: null,
+        license_verified: false,
+        license_verified_at: null,
         nursys_enrolled_at: new Date().toISOString(),
       } as never)
       .eq('id', nurseProfileId)

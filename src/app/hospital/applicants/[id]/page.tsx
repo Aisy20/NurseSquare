@@ -9,6 +9,7 @@ import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import { calculatePlatformFee, PLATFORM_FEE_PERCENT } from '@/lib/stripe'
 import { Star, Shield, CheckCircle, DollarSign, AlertCircle, MessageSquare } from 'lucide-react'
 
 const STATUS_OPTIONS = ['pending', 'reviewing', 'offered', 'rejected'] as const
@@ -101,8 +102,7 @@ export default function ApplicationDetailPage() {
   const nurse = app.nurse_profiles
   const job = app.job_postings
   const contractValue = job.weekly_rate * job.duration_weeks
-  const platformFee = contractValue * 0.15
-  const nurseEarnings = contractValue - platformFee
+  const platformFee = calculatePlatformFee(contractValue)
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -218,7 +218,7 @@ export default function ApplicationDetailPage() {
                     <span className="font-semibold">{formatCurrency(contractValue)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Platform fee (15%)</span>
+                    <span className="text-gray-600">Platform fee ({Math.round(PLATFORM_FEE_PERCENT * 100)}%)</span>
                     <span className="font-semibold text-blue-700">{formatCurrency(platformFee)}</span>
                   </div>
                   <div className="flex justify-between border-t pt-2">

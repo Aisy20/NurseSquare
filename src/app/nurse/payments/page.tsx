@@ -31,8 +31,10 @@ export default async function NursePaymentsPage() {
   const held = placements?.filter(p => p.escrow_status === 'held') || []
   const refunded = placements?.filter(p => p.escrow_status === 'refunded') || []
 
-  const totalEarned = released.reduce((s, p) => s + (p.contract_value - p.platform_fee), 0)
-  const inEscrow = held.reduce((s, p) => s + (p.contract_value - p.platform_fee), 0)
+  // Nurses keep the full contract value — the 15% platform fee is paid
+  // by the employer on top of the contract, not deducted from the nurse.
+  const totalEarned = released.reduce((s, p) => s + p.contract_value, 0)
+  const inEscrow = held.reduce((s, p) => s + p.contract_value, 0)
   const lifetimeGross = (placements || []).reduce((s, p) => s + p.contract_value, 0)
 
   const statusMap: Record<string, { variant: 'default' | 'success' | 'warning' | 'danger' | 'info'; label: string; icon: any }> = {
@@ -115,7 +117,6 @@ export default async function NursePaymentsPage() {
               {placements.map(p => {
                 const st = statusMap[p.escrow_status] || statusMap.held
                 const Icon = st.icon
-                const netEarnings = p.contract_value - p.platform_fee
                 return (
                   <div key={p.id} className="py-4 first:pt-0 last:pb-0">
                     <div className="flex items-start justify-between gap-4">
@@ -140,15 +141,14 @@ export default async function NursePaymentsPage() {
                             <span>Released: <strong style={{ color: 'var(--ink)' }}>{formatDate(p.released_at)}</strong></span>
                           )}
                           <span>Contract: <strong style={{ color: 'var(--ink)' }}>{formatCurrency(p.contract_value)}</strong></span>
-                          <span>Platform fee: <strong style={{ color: 'var(--ink)' }}>-{formatCurrency(p.platform_fee)}</strong></span>
                         </div>
                       </div>
                       <div className="text-right shrink-0">
                         <p className="font-display text-xl" style={{ color: 'var(--ink)' }}>
-                          {formatCurrency(netEarnings)}
+                          {formatCurrency(p.contract_value)}
                         </p>
                         <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--g400)' }}>
-                          Net earnings
+                          Earnings
                         </p>
                       </div>
                     </div>

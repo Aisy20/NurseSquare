@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail, emailTemplates } from '@/lib/resend'
 
-const VALID_STATUSES = ['pending', 'reviewing', 'offered', 'accepted', 'rejected', 'withdrawn'] as const
+// 'accepted' is intentionally excluded — that transition only happens
+// inside /api/stripe/connect, which also creates the placement and charges
+// the employer. Allowing it here would let a hospital mark a nurse accepted
+// without ever paying.
+const VALID_STATUSES = ['pending', 'reviewing', 'offered', 'rejected', 'withdrawn'] as const
 
 export async function POST(req: NextRequest) {
   const { applicationId, status } = await req.json()

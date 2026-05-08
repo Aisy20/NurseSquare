@@ -100,8 +100,7 @@ export default function NurseProfilePage() {
       setSuccess('Profile saved successfully!')
       setProfile((prev: any) => ({
         ...prev,
-        ...form,
-        ...(licenseChanged ? { license_verified: false } : {}),
+        ...update,
       }))
     }
     setSaving(false)
@@ -288,10 +287,16 @@ export default function NurseProfilePage() {
                 {profile?.background_check_status === 'in_progress' && (
                   <p className="text-sm text-blue-600">Your background check is in progress. We&apos;ll notify you when it&apos;s complete.</p>
                 )}
+                {profile?.background_check_status === 'pending' && (
+                  <p className="text-sm text-yellow-700">Your report is complete but flagged for manual review. Our team will reach out within 1–2 business days.</p>
+                )}
                 {profile?.background_check_status === 'passed' && (
                   <p className="text-sm text-green-600 flex items-center gap-1">
                     <CheckCircle className="w-4 h-4" /> Background check passed. You can apply for jobs.
                   </p>
+                )}
+                {profile?.background_check_status === 'failed' && (
+                  <p className="text-sm text-red-600">Your background check did not pass. Contact support if you believe this is in error.</p>
                 )}
               </div>
             </div>

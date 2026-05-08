@@ -40,9 +40,11 @@ export default async function NurseDashboard({ searchParams }: { searchParams: P
 
   if (!nurseProfile) redirect('/nurse/profile')
 
+  // Nurses keep the full contract; the 15% platform fee is paid by the
+  // employer on top, not deducted from the nurse's payout.
   const totalEarnings = placements
     ?.filter(p => p.escrow_status === 'released')
-    .reduce((sum, p) => sum + (p.contract_value - p.platform_fee), 0) || 0
+    .reduce((sum, p) => sum + p.contract_value, 0) || 0
 
   const profileComplete = !!(
     nurseProfile.license_number &&

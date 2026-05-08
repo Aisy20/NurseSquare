@@ -127,11 +127,12 @@ export default async function AdminOverviewPage() {
         </div>
 
         {/* Admin nav */}
-        <div className="grid sm:grid-cols-3 gap-4 mb-10">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
           {[
             { href: '/admin/users', label: 'Users', desc: 'All nurses and hospitals', icon: Users, color: 'var(--plum)' },
             { href: '/admin/jobs', label: 'Jobs', desc: 'All postings', icon: Briefcase, color: 'var(--sage)' },
             { href: '/admin/payments', label: 'Payments', desc: 'Placements & escrow', icon: DollarSign, color: 'var(--tang)' },
+            { href: '/admin/nursys', label: 'Nursys', desc: 'NCSBN ops & docs', icon: Shield, color: 'var(--plum)' },
           ].map(item => (
             <Link key={item.href} href={item.href}
               className="rounded-2xl border p-5 no-underline transition-all hover:-translate-y-0.5 hover:shadow-md"

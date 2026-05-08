@@ -9,6 +9,18 @@ export async function POST(req: NextRequest) {
   }
 
   const checkrApiKey = process.env.CHECKR_API_KEY
+  const checkrPackage = process.env.CHECKR_PACKAGE_SLUG
+
+  // Marketing copy promises the worker pays the Checkr fee directly. Whether
+  // the candidate or the employer is billed is determined by the package slug
+  // — there's no universal "candidate-paid" default. Refuse to invite if no
+  // slug is configured, rather than silently falling back to an employer-paid
+  // package and surprising the platform with a bill.
+  if (checkrApiKey && !checkrPackage) {
+    return NextResponse.json({
+      error: 'CHECKR_PACKAGE_SLUG not configured. Set the candidate-paid package slug in env before inviting candidates.',
+    }, { status: 500 })
+  }
 
   try {
     let invitationUrl: string
@@ -40,7 +52,7 @@ export async function POST(req: NextRequest) {
         headers: { 'Authorization': authHeader, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           candidate_id: candidateId,
-          package: process.env.CHECKR_PACKAGE_SLUG || 'tasker_standard',
+          package: checkrPackage,
         }),
       })
 

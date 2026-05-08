@@ -39,8 +39,12 @@ export async function POST(req: NextRequest) {
         .eq('id', application.job_postings.employer_profiles.id)
     }
 
+    // Employer is charged contract + 15% fee. The nurse receives the full
+    // contract; the platform keeps `platformFee`. Public marketing copy
+    // ("Nurses pay nothing", "the rate you see is exactly what you earn")
+    // depends on this — don't fold the fee back into contractValue.
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(contractValue * 100),
+      amount: Math.round((contractValue + platformFee) * 100),
       currency: 'usd',
       customer: customerId,
       description: `NurseSquare placement: ${job.title}`,
