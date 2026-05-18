@@ -55,7 +55,28 @@ export const emailTemplates = {
 
   welcomeEmployer: (orgName: string) => `
     <h2>Welcome to NurseSquare, ${orgName}!</h2>
-    <p>Your employer account is ready. Post jobs and connect directly with qualified travel nurses — no middleman agencies.</p>
+    <p>Your employer account is ready. Post jobs and connect directly with qualified travel nurses, no middleman agencies.</p>
     <a href="${process.env.NEXT_PUBLIC_APP_URL}/hospital/post-job" style="background:#2563eb;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;">Post Your First Job</a>
+  `,
+
+  credentialExpiringSoon: ({
+    credentialName,
+    expiresAt,
+    daysUntil,
+    credentialId,
+  }: {
+    credentialName: string
+    expiresAt: string
+    daysUntil: number
+    credentialId: string
+  }) => `
+    <h2>${daysUntil <= 0 ? 'A credential has expired' : `${credentialName} expires in ${daysUntil} days`}</h2>
+    <p>${daysUntil <= 0
+      ? `Your <strong>${credentialName}</strong> expired on ${expiresAt}.`
+      : `Your <strong>${credentialName}</strong> is set to expire on ${expiresAt} (${daysUntil} days from now).`}
+    </p>
+    <p>Replace the document or update the expiration in your Credentialing Wallet so future contracts will not flag this as a blocker.</p>
+    <a href="${process.env.NEXT_PUBLIC_APP_URL}/nurse/credentials/${credentialId}" style="background:#2D1B69;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;">Update credential</a>
+    <p style="color:#6B6580;font-size:12px;margin-top:24px;">You are receiving this because you added this credential to NurseSquare. Manage notifications from your profile.</p>
   `,
 }

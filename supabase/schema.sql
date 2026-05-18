@@ -913,3 +913,61 @@ ALTER TABLE credentials
 CREATE INDEX IF NOT EXISTS credentials_expires_idx ON credentials(expires_at);
 CREATE INDEX IF NOT EXISTS credentials_type_idx ON credentials(LOWER(type));
 
+ALTER TABLE credentials
+  ADD COLUMN IF NOT EXISTS reminders_sent JSONB NOT NULL DEFAULT '{}'::jsonb;
+
+-- ------------------------------------------------------------
+-- credential_share_links: opt-in public sharing of one credential
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS credential_share_links (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  credential_id UUID NOT NULL REFERENCES credentials(id) ON DELETE CASCADE,
+  slug TEXT NOT NULL UNIQUE,
+  created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  expires_at TIMESTAMPTZ,
+  expose_document BOOLEAN NOT NULL DEFAULT FALSE,
+  view_count INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS credential_share_links_credential_idx ON credential_share_links(credential_id);
+
+ALTER TABLE credential_share_links ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can read non-expired credential share links" ON credential_share_links
+  FOR SELECT USING (expires_at IS NULL OR expires_at > NOW());
+
+CREATE POLICY "Owners create credential share links" ON credential_share_links
+  FOR INSERT WITH CHECK (
+    auth.uid() = created_by AND EXISTS (
+      SELECT 1 FROM credentials c
+      WHERE c.id = credential_id AND c.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Owners delete credential share links" ON credential_share_links
+  FOR DELETE USING (auth.uid() = created_by);
+
+-- Public read of the underlying credential when an active share link
+-- points to it. Limits the exposure to metadata; the document_url is
+-- only included by the service-role page if expose_document=true.
+CREATE POLICY "Public read shared credentials" ON credentials
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM credential_share_links csl
+      WHERE csl.credential_id = id
+        AND (csl.expires_at IS NULL OR csl.expires_at > NOW())
+    )
+  );
+
+CREATE OR REPLACE FUNCTION increment_credential_share_view(p_slug TEXT)
+RETURNS credential_share_links AS $$
+  UPDATE credential_share_links
+  SET view_count = view_count + 1
+  WHERE slug = p_slug
+    AND (expires_at IS NULL OR expires_at > NOW())
+  RETURNING *;
+$$ LANGUAGE sql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION increment_credential_share_view(TEXT) TO anon, authenticated;
+

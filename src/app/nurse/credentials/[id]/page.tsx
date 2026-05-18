@@ -6,6 +6,8 @@ import Navbar from '@/components/layout/Navbar'
 import { freshnessFor, daysUntilExpiry, type CredentialRow } from '@/lib/ledger/credentials/types'
 import DeleteCredentialButton from '@/components/credentials/DeleteCredentialButton'
 import EditCredentialForm from '@/components/credentials/EditCredentialForm'
+import ShareCredentialModal from '@/components/credentials/ShareCredentialModal'
+import VerifyCredentialButton from '@/components/credentials/VerifyCredentialButton'
 
 export default async function NurseCredentialDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -49,7 +51,9 @@ export default async function NurseCredentialDetailPage({ params }: { params: Pr
 
         <EditCredentialForm credential={credential} />
 
-        <div className="mt-6 flex gap-3">
+        <div className="mt-6 flex flex-wrap gap-3">
+          <ShareCredentialModal credentialId={credential.id} />
+          <VerifyCredentialButton credential={credential} />
           <DeleteCredentialButton id={credential.id} />
         </div>
       </main>
