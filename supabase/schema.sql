@@ -787,11 +787,19 @@ CREATE TABLE credentials (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   type TEXT NOT NULL,
+  display_name TEXT,
   status TEXT NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'verified', 'expired', 'rejected')),
+  issued_at DATE,
   expires_at DATE,
+  issuer TEXT,
+  card_number TEXT,
   document_url TEXT,
+  document_path TEXT,
   verification_source TEXT,
+  extraction_confidence NUMERIC(3,2),
+  requires_review BOOLEAN NOT NULL DEFAULT FALSE,
+  notes TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -886,4 +894,22 @@ RETURNS ledger_share_links AS $$
 $$ LANGUAGE sql SECURITY DEFINER;
 
 GRANT EXECUTE ON FUNCTION increment_ledger_share_view(TEXT) TO anon, authenticated;
+
+-- ============================================================
+-- CREDENTIALING WALLET (Module 2) additive migrations
+-- Run these if your `credentials` table was created from an earlier
+-- version of this schema and is missing the newer columns.
+-- ============================================================
+ALTER TABLE credentials
+  ADD COLUMN IF NOT EXISTS display_name TEXT,
+  ADD COLUMN IF NOT EXISTS issued_at DATE,
+  ADD COLUMN IF NOT EXISTS issuer TEXT,
+  ADD COLUMN IF NOT EXISTS card_number TEXT,
+  ADD COLUMN IF NOT EXISTS document_path TEXT,
+  ADD COLUMN IF NOT EXISTS extraction_confidence NUMERIC(3,2),
+  ADD COLUMN IF NOT EXISTS requires_review BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS notes TEXT;
+
+CREATE INDEX IF NOT EXISTS credentials_expires_idx ON credentials(expires_at);
+CREATE INDEX IF NOT EXISTS credentials_type_idx ON credentials(LOWER(type));
 

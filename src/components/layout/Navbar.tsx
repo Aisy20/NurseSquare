@@ -71,6 +71,7 @@ export default function Navbar({ userRole, userName }: NavbarProps) {
     { href: '/nurse/jobs', label: 'Find Jobs' },
     { href: '/nurse/applications', label: 'My Applications' },
     { href: '/nurse/ledger', label: 'Pay Ledger' },
+    { href: '/nurse/credentials', label: 'Credentials' },
     { href: '/messages', label: 'Messages' },
     { href: '/nurse/payments', label: 'Payments' },
     { href: '/nurse/dashboard', label: 'Dashboard' },

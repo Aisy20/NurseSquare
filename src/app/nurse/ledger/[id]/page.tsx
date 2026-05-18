@@ -6,6 +6,8 @@ import Navbar from '@/components/layout/Navbar'
 import ContractTimeline from '@/components/ledger/ContractTimeline'
 import AddQuoteForm from '@/components/ledger/AddQuoteForm'
 import UploadSignedForm from '@/components/ledger/UploadSignedForm'
+import RequiredCredentialsPanel from '@/components/credentials/RequiredCredentialsPanel'
+import type { CredentialRow } from '@/lib/ledger/credentials/types'
 
 export default async function NurseLedgerContractPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -21,14 +23,27 @@ export default async function NurseLedgerContractPage({ params }: { params: Prom
 
   if (!contract) notFound()
 
-  const [{ data: quotes }, { data: signed }, { data: diff }] = await Promise.all([
+  const [{ data: quotes }, { data: signed }, { data: diff }, { data: credentials }] = await Promise.all([
     supabase.from('ledger_quotes').select('*').eq('contract_id', id).order('received_at', { ascending: false }),
     supabase.from('ledger_signed_contracts').select('*').eq('contract_id', id).maybeSingle(),
     supabase.from('ledger_diffs').select('id').eq('contract_id', id).order('computed_at', { ascending: false }).maybeSingle(),
+    supabase.from('credentials').select('*').eq('user_id', user.id),
   ])
 
   const agency = (contract.ledger_agencies as { name?: string } | null)?.name
   const recruiter = (contract.ledger_recruiters as { name?: string } | null)?.name
+
+  const required = new Set<string>()
+  for (const q of quotes ?? []) {
+    const payload = q.extracted_payload as { required_credentials?: string[] } | null
+    if (Array.isArray(payload?.required_credentials)) {
+      for (const c of payload.required_credentials) required.add(c)
+    }
+  }
+  const signedPayload = (signed?.extracted_payload as { required_credentials?: string[] } | null) ?? null
+  if (Array.isArray(signedPayload?.required_credentials)) {
+    for (const c of signedPayload.required_credentials) required.add(c)
+  }
 
   return (
     <div className="flex flex-col min-h-screen" style={{ background: 'var(--cream)' }}>
@@ -55,7 +70,12 @@ export default async function NurseLedgerContractPage({ params }: { params: Prom
         </div>
 
         <div className="grid lg:grid-cols-[1fr_360px] gap-8">
-          <ContractTimeline quotes={quotes ?? []} signed={signed ?? null} />
+          <div className="space-y-6">
+            {required.size > 0 && (
+              <RequiredCredentialsPanel required={Array.from(required)} userCredentials={(credentials ?? []) as CredentialRow[]} />
+            )}
+            <ContractTimeline quotes={quotes ?? []} signed={signed ?? null} />
+          </div>
           <div className="space-y-4">
             <AddQuoteForm contractId={id} />
             {!signed && <UploadSignedForm contractId={id} />}
