@@ -3,6 +3,19 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import Navbar from '@/components/layout/Navbar'
+import PageHero from '@/components/ui/PageHero'
+import StatCard from '@/components/ui/StatCard'
+import EmptyState from '@/components/ui/EmptyState'
+import Button from '@/components/ui/Button'
+import { FileText, ArrowUpRight } from 'lucide-react'
+
+const STATUS_TONE: Record<string, { bg: string; color: string }> = {
+  open: { bg: 'var(--plum-50)', color: 'var(--plum)' },
+  signed: { bg: 'var(--sage-50)', color: 'var(--sage)' },
+  completed: { bg: 'var(--g100)', color: 'var(--g600)' },
+  cancelled: { bg: 'var(--tang-50)', color: 'var(--tang-mid)' },
+  archived: { bg: 'var(--g100)', color: 'var(--g400)' },
+}
 
 export default async function NurseLedgerPage() {
   const supabase = await createClient()
@@ -15,65 +28,81 @@ export default async function NurseLedgerPage() {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
+  const rows = contracts ?? []
+  const counts = rows.reduce(
+    (acc, c) => {
+      acc.total++
+      if (c.status === 'open') acc.open++
+      else if (c.status === 'signed') acc.signed++
+      return acc
+    },
+    { total: 0, open: 0, signed: 0 },
+  )
+
   return (
     <div className="flex flex-col min-h-screen" style={{ background: 'var(--cream)' }}>
       <Navbar userRole="nurse" userName={user.email?.split('@')[0]} />
-      <main className="max-w-[1280px] mx-auto w-full px-4 sm:px-8 lg:px-12 py-10">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="font-display text-4xl" style={{ color: 'var(--ink)' }}>Pay-Package Ledger</h1>
-            <p className="text-sm mt-2" style={{ color: 'var(--g600)' }}>Catch bait-and-switch by diffing what recruiters quoted against what you signed.</p>
-          </div>
-          <CreateContractButton />
-        </div>
+      <main className="max-w-[1280px] mx-auto w-full px-4 sm:px-8 lg:px-12 py-10 lg:py-14">
+        <PageHero
+          eyebrow="Pay-Package Ledger"
+          title="Catch the bait-and-switch"
+          titleAccent="before you sign."
+          subtitle="Paste recruiter quotes or upload offer PDFs. NurseSquare extracts the structured pay package, then diffs it against your signed contract so the gap shows up before payroll does."
+          actions={
+            <Link href="/nurse/ledger/new"><Button variant="tang" size="md">New contract</Button></Link>
+          }
+        />
 
-        {contracts && contracts.length > 0 ? (
-          <div className="grid gap-4">
-            {contracts.map((c) => (
-              <Link key={c.id} href={`/nurse/ledger/${c.id}`} className="block rounded-2xl border p-5 hover:shadow-md transition no-underline" style={{ borderColor: 'var(--g100)', background: 'white', color: 'var(--ink)' }}>
-                <div className="flex items-center justify-between">
+        {rows.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
+            <StatCard label="Contracts tracked" value={counts.total} tone="plum" />
+            <StatCard label="In negotiation" value={counts.open} sub="open status" />
+            <StatCard label="Signed" value={counts.signed} sub="diff available" />
+            <StatCard label="Diff coverage" value={`${counts.total > 0 ? Math.round((counts.signed / counts.total) * 100) : 0}%`} sub="signed / total" />
+          </div>
+        )}
+
+        {rows.length === 0 ? (
+          <EmptyState
+            icon={<FileText className="w-6 h-6" />}
+            title="No contracts yet"
+            description="Start by uploading a recruiter offer PDF. We will auto-fill the specialty, location, and pay package."
+            action={<Link href="/nurse/ledger/new"><Button variant="tang" size="md">Upload your first offer</Button></Link>}
+          />
+        ) : (
+          <div className="grid gap-3">
+            {rows.map((c) => {
+              const tone = STATUS_TONE[c.status] ?? STATUS_TONE.open
+              return (
+                <Link
+                  key={c.id}
+                  href={`/nurse/ledger/${c.id}`}
+                  className="group flex items-center justify-between rounded-2xl border p-5 hover:shadow-md transition-all no-underline"
+                  style={{ borderColor: 'var(--g100)', background: 'white', color: 'var(--ink)' }}
+                >
                   <div>
-                    <div className="text-sm font-bold">{c.specialty ?? 'Untitled contract'} {c.location_city ? `· ${c.location_city}, ${c.location_state}` : ''}</div>
+                    <div className="text-sm font-bold tracking-tight" style={{ fontFamily: 'var(--font-sora)' }}>
+                      {c.specialty ?? 'Untitled contract'}
+                      {c.location_city && (
+                        <span style={{ color: 'var(--g400)' }}> · {c.location_city}, {c.location_state}</span>
+                      )}
+                    </div>
                     <div className="text-xs mt-1" style={{ color: 'var(--g600)' }}>
-                      {c.ledger_recruiters && Array.isArray(c.ledger_recruiters) ? '' : ''}
-                      {c.start_date ? `${c.start_date} → ${c.end_date ?? '?'}` : 'Dates TBD'}
+                      {c.start_date ? `${c.start_date} → ${c.end_date ?? 'TBD'}` : 'Dates TBD'}
                     </div>
                   </div>
-                  <StatusBadge status={c.status} />
-                </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-3xl border-2 border-dashed p-12 text-center" style={{ borderColor: 'var(--g200)' }}>
-            <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--ink)' }}>No contracts yet</h2>
-            <p className="text-sm mb-6" style={{ color: 'var(--g600)' }}>Start by creating a contract thread. Then paste quotes you receive or upload a signed contract.</p>
-            <CreateContractButton />
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] font-bold tracking-[1px] uppercase px-2.5 py-1 rounded-md" style={{ background: tone.bg, color: tone.color }}>
+                      {c.status}
+                    </span>
+                    <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--plum)' }} />
+                  </div>
+                </Link>
+              )
+            })}
           </div>
         )}
       </main>
     </div>
-  )
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { bg: string; color: string }> = {
-    open: { bg: 'var(--plum-50)', color: 'var(--plum)' },
-    signed: { bg: 'var(--sage-50)', color: 'var(--sage)' },
-    completed: { bg: 'var(--g100)', color: 'var(--g600)' },
-    cancelled: { bg: 'var(--tang-50)', color: 'var(--tang-mid)' },
-    archived: { bg: 'var(--g100)', color: 'var(--g400)' },
-  }
-  const s = map[status] ?? map.open
-  return <span className="text-[11px] font-bold tracking-wider px-2 py-1 rounded" style={{ background: s.bg, color: s.color }}>{status.toUpperCase()}</span>
-}
-
-function CreateContractButton() {
-  return (
-    <form action="/nurse/ledger/new" method="get">
-      <button className="px-5 py-2.5 rounded-xl font-bold text-sm text-white" style={{ background: 'var(--tang)' }}>
-        New contract
-      </button>
-    </form>
   )
 }

@@ -8,6 +8,8 @@ import AddQuoteForm from '@/components/ledger/AddQuoteForm'
 import UploadSignedForm from '@/components/ledger/UploadSignedForm'
 import RequiredCredentialsPanel from '@/components/credentials/RequiredCredentialsPanel'
 import type { CredentialRow } from '@/lib/ledger/credentials/types'
+import Button from '@/components/ui/Button'
+import { ArrowLeft, BarChart3 } from 'lucide-react'
 
 export default async function NurseLedgerContractPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -48,23 +50,39 @@ export default async function NurseLedgerContractPage({ params }: { params: Prom
   return (
     <div className="flex flex-col min-h-screen" style={{ background: 'var(--cream)' }}>
       <Navbar userRole="nurse" userName={user.email?.split('@')[0]} />
-      <main className="max-w-[1100px] mx-auto w-full px-4 sm:px-8 py-10">
-        <Link href="/nurse/ledger" className="text-sm no-underline" style={{ color: 'var(--g600)' }}>← Back to ledger</Link>
+      <main className="max-w-[1100px] mx-auto w-full px-4 sm:px-8 py-10 lg:py-14">
+        <Link href="/nurse/ledger" className="inline-flex items-center gap-1.5 text-sm no-underline group" style={{ color: 'var(--g600)' }}>
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+          Back to ledger
+        </Link>
 
-        <div className="flex items-start justify-between mt-3 mb-6">
-          <div>
-            <h1 className="font-display text-3xl" style={{ color: 'var(--ink)' }}>
-              {contract.specialty ?? 'Contract'} {contract.location_city ? `· ${contract.location_city}, ${contract.location_state}` : ''}
+        <div className="flex items-start justify-between gap-6 flex-wrap mt-4 mb-8">
+          <div className="max-w-2xl">
+            <div className="text-[10px] font-bold tracking-[1.2px] uppercase mb-2" style={{ color: 'var(--tang)' }}>
+              {contract.status}
+            </div>
+            <h1 className="font-display text-4xl lg:text-5xl leading-[1.05] tracking-[-0.5px]" style={{ color: 'var(--ink)' }}>
+              {contract.specialty ?? 'Untitled contract'}
+              {contract.location_city && (
+                <span style={{ color: 'var(--g400)' }}> · {contract.location_city}, {contract.location_state}</span>
+              )}
             </h1>
-            <p className="text-sm mt-1" style={{ color: 'var(--g600)' }}>
-              {agency && <>Agency: {agency} · </>}
-              {recruiter && <>Recruiter: {recruiter} · </>}
-              {contract.start_date ? `${contract.start_date} → ${contract.end_date ?? 'TBD'}` : 'Dates TBD'}
-            </p>
+            <div className="text-sm mt-3 flex flex-wrap items-center gap-x-3 gap-y-1" style={{ color: 'var(--g600)' }}>
+              {agency && <span><span style={{ color: 'var(--g400)' }}>Agency:</span> {agency}</span>}
+              {recruiter && <span><span style={{ color: 'var(--g400)' }}>Recruiter:</span> {recruiter}</span>}
+              {contract.start_date && (
+                <span>
+                  <span style={{ color: 'var(--g400)' }}>Term:</span> {contract.start_date} → {contract.end_date ?? 'TBD'}
+                </span>
+              )}
+            </div>
           </div>
           {diff && (
-            <Link href={`/nurse/ledger/${id}/diff`} className="px-5 py-2.5 rounded-xl font-bold text-sm text-white no-underline" style={{ background: 'var(--tang)' }}>
-              View diff
+            <Link href={`/nurse/ledger/${id}/diff`}>
+              <Button variant="tang" size="md">
+                <BarChart3 className="w-4 h-4 mr-1.5" />
+                View diff
+              </Button>
             </Link>
           )}
         </div>

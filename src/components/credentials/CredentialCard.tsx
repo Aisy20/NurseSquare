@@ -1,11 +1,12 @@
 import Link from 'next/link'
-import { daysUntilExpiry, freshnessFor, type CredentialRow } from '@/lib/ledger/credentials/types'
+import { ArrowUpRight, ShieldCheck, Clock, AlertTriangle, ShieldAlert } from 'lucide-react'
+import { daysUntilExpiry, freshnessFor, type CredentialRow, type CredentialFreshness } from '@/lib/ledger/credentials/types'
 
-const FRESHNESS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  active: { bg: 'var(--sage-50)', color: 'var(--sage)', label: 'ACTIVE' },
-  expiring_soon: { bg: 'var(--gold-50)', color: 'var(--ink)', label: 'EXPIRING SOON' },
-  expired: { bg: 'var(--tang-50)', color: 'var(--tang-mid)', label: 'EXPIRED' },
-  unknown: { bg: 'var(--g100)', color: 'var(--g600)', label: 'NO EXPIRY' },
+const FRESHNESS_STYLE: Record<CredentialFreshness, { bg: string; color: string; label: string; icon: React.ReactNode }> = {
+  active: { bg: 'var(--sage-50)', color: 'var(--sage)', label: 'ACTIVE', icon: <ShieldCheck className="w-4 h-4" /> },
+  expiring_soon: { bg: 'var(--gold-50)', color: 'var(--ink)', label: 'EXPIRING SOON', icon: <Clock className="w-4 h-4" /> },
+  expired: { bg: 'var(--tang-50)', color: 'var(--tang-mid)', label: 'EXPIRED', icon: <ShieldAlert className="w-4 h-4" /> },
+  unknown: { bg: 'var(--g100)', color: 'var(--g600)', label: 'NO EXPIRY', icon: <AlertTriangle className="w-4 h-4" /> },
 }
 
 export default function CredentialCard({ credential }: { credential: CredentialRow }) {
@@ -18,35 +19,44 @@ export default function CredentialCard({ credential }: { credential: CredentialR
       : fresh === 'expiring_soon'
         ? `${days} days to renewal`
         : fresh === 'active'
-          ? `Expires ${credential.expires_at}`
+          ? `Valid through ${credential.expires_at}`
           : 'No expiration on file'
 
   return (
     <Link
       href={`/nurse/credentials/${credential.id}`}
-      className="block rounded-2xl border p-5 hover:shadow-md transition no-underline"
+      className="group flex items-center justify-between rounded-2xl border p-5 hover:shadow-md transition-all no-underline"
       style={{ borderColor: 'var(--g100)', background: 'white', color: 'var(--ink)' }}
     >
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="text-sm font-bold">{credential.display_name ?? credential.type}</div>
-          <div className="text-xs mt-1" style={{ color: 'var(--g600)' }}>
+      <div className="flex items-start gap-4 min-w-0">
+        <div
+          className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ background: s.bg, color: s.color }}
+        >
+          {s.icon}
+        </div>
+        <div className="min-w-0">
+          <div className="text-sm font-bold truncate" style={{ fontFamily: 'var(--font-sora)' }}>
+            {credential.display_name ?? credential.type}
+          </div>
+          <div className="text-xs mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5" style={{ color: 'var(--g600)' }}>
             <span className="font-mono">{credential.type}</span>
-            {credential.issuer && <> · {credential.issuer}</>}
-            {credential.card_number && <> · #{credential.card_number}</>}
+            {credential.issuer && <span>· {credential.issuer}</span>}
+            {credential.card_number && <span>· #{credential.card_number}</span>}
           </div>
           <div className="text-xs mt-1" style={{ color: 'var(--g600)' }}>{subtitle}</div>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          <span className="text-[11px] font-bold tracking-wider px-2 py-1 rounded" style={{ background: s.bg, color: s.color }}>
-            {s.label}
+      </div>
+      <div className="flex flex-col items-end gap-1.5 flex-shrink-0 ml-3">
+        <span className="text-[10px] font-bold tracking-[1px] uppercase px-2.5 py-1 rounded-md" style={{ background: s.bg, color: s.color }}>
+          {s.label}
+        </span>
+        {credential.requires_review && (
+          <span className="text-[9px] font-bold tracking-[1px] uppercase px-2 py-0.5 rounded-md" style={{ background: 'var(--plum-50)', color: 'var(--plum)' }}>
+            verify
           </span>
-          {credential.requires_review && (
-            <span className="text-[10px] font-bold tracking-wider px-2 py-1 rounded" style={{ background: 'var(--plum-50)', color: 'var(--plum)' }}>
-              VERIFY
-            </span>
-          )}
-        </div>
+        )}
+        <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--plum)' }} />
       </div>
     </Link>
   )

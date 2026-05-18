@@ -3,7 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/layout/Navbar'
+import PageHero from '@/components/ui/PageHero'
+import Button from '@/components/ui/Button'
 import { CANONICAL_CREDENTIAL_TYPES } from '@/lib/ledger/credentials/types'
+import { FileUp, PencilLine } from 'lucide-react'
 
 type Mode = 'upload' | 'manual'
 
@@ -13,14 +16,16 @@ export default function NewCredentialPage() {
   return (
     <div className="flex flex-col min-h-screen" style={{ background: 'var(--cream)' }}>
       <Navbar userRole="nurse" />
-      <main className="max-w-2xl mx-auto w-full px-4 py-10">
-        <h1 className="font-display text-3xl mb-2" style={{ color: 'var(--ink)' }}>Add credential</h1>
-        <p className="text-sm mb-6" style={{ color: 'var(--g600)' }}>
-          Upload a PDF or photo of the certificate and we will extract the type, issuer, and expiration date. Or enter the details manually.
-        </p>
-        <div className="flex gap-2 mb-5">
-          <Tab active={mode === 'upload'} onClick={() => setMode('upload')} label="Upload PDF or image" />
-          <Tab active={mode === 'manual'} onClick={() => setMode('manual')} label="Manual entry" />
+      <main className="max-w-2xl mx-auto w-full px-4 py-10 lg:py-14">
+        <PageHero
+          eyebrow="New credential"
+          title="Upload it once,"
+          titleAccent="we will track the rest."
+          subtitle="PDF, PNG, JPG, or WEBP. We extract the type, issuer, and expiration so we can email you before it lapses."
+        />
+        <div role="tablist" className="inline-flex p-1 rounded-2xl mb-6" style={{ background: 'var(--cream-mid)' }}>
+          <Tab active={mode === 'upload'} onClick={() => setMode('upload')} icon={<FileUp className="w-4 h-4" />} label="Upload" />
+          <Tab active={mode === 'manual'} onClick={() => setMode('manual')} icon={<PencilLine className="w-4 h-4" />} label="Manual entry" />
         </div>
         {mode === 'upload' ? <UploadForm /> : <ManualForm />}
       </main>
@@ -28,13 +33,16 @@ export default function NewCredentialPage() {
   )
 }
 
-function Tab({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
+function Tab({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
   return (
-    <button onClick={onClick}
-      className="px-4 py-2 rounded-lg text-sm font-bold border"
+    <button
+      onClick={onClick}
+      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
       style={active
-        ? { background: 'var(--plum)', color: 'white', borderColor: 'var(--plum)' }
-        : { background: 'white', color: 'var(--g600)', borderColor: 'var(--g100)' }}>
+        ? { background: 'white', color: 'var(--ink)', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
+        : { background: 'transparent', color: 'var(--g600)' }}
+    >
+      {icon}
       {label}
     </button>
   )
@@ -64,38 +72,43 @@ function UploadForm() {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4 rounded-2xl border p-6" style={{ borderColor: 'var(--g100)', background: 'white' }}>
-      <label className="block">
-        <span className="text-xs font-bold tracking-wider" style={{ color: 'var(--g600)' }}>CERTIFICATE FILE</span>
-        <input type="file" accept="application/pdf,image/png,image/jpeg,image/webp"
-          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          className="mt-2 block w-full text-sm" />
-        <p className="text-xs mt-2" style={{ color: 'var(--g600)' }}>PDF, PNG, JPG, or WEBP. Max 10 MB.</p>
+    <form onSubmit={submit} className="space-y-5 rounded-3xl border p-6" style={{ borderColor: 'var(--g100)', background: 'white' }}>
+      <label
+        className="block rounded-2xl border-2 border-dashed p-8 text-center cursor-pointer transition-colors hover:bg-[var(--cream-mid)]"
+        style={{ borderColor: file ? 'var(--plum)' : 'var(--g200)' }}
+      >
+        <input type="file" accept="application/pdf,image/png,image/jpeg,image/webp" className="hidden"
+          onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+        <FileUp className="w-8 h-8 mx-auto mb-3" style={{ color: file ? 'var(--plum)' : 'var(--g400)' }} />
+        <div className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>
+          {file ? file.name : 'Click to choose a file'}
+        </div>
+        <div className="text-xs mt-1" style={{ color: 'var(--g600)' }}>
+          {file ? `${(file.size / 1024).toFixed(0)} KB` : 'PDF, PNG, JPG, or WEBP. Max 10 MB.'}
+        </div>
       </label>
       <details className="text-sm" style={{ color: 'var(--g600)' }}>
         <summary className="cursor-pointer font-semibold" style={{ color: 'var(--ink)' }}>Override extraction (optional)</summary>
-        <div className="mt-3 space-y-3">
+        <div className="mt-3 grid grid-cols-2 gap-3">
           <label className="block">
-            <span className="text-xs font-bold tracking-wider">TYPE</span>
+            <span className="text-[10px] font-bold tracking-[1.2px] uppercase" style={{ color: 'var(--g600)' }}>Type</span>
             <select value={typeOverride} onChange={(e) => setTypeOverride(e.target.value)}
-              className="mt-1 w-full px-3 py-2 rounded-lg border text-sm" style={{ borderColor: 'var(--g100)' }}>
+              className="mt-1.5 w-full px-3.5 py-2.5 rounded-xl border text-sm" style={{ borderColor: 'var(--g100)' }}>
               <option value="">Let Claude detect</option>
               {CANONICAL_CREDENTIAL_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </label>
           <label className="block">
-            <span className="text-xs font-bold tracking-wider">EXPIRES AT</span>
+            <span className="text-[10px] font-bold tracking-[1.2px] uppercase" style={{ color: 'var(--g600)' }}>Expires at</span>
             <input type="date" value={expiresOverride} onChange={(e) => setExpiresOverride(e.target.value)}
-              className="mt-1 w-full px-3 py-2 rounded-lg border text-sm" style={{ borderColor: 'var(--g100)' }} />
+              className="mt-1.5 w-full px-3.5 py-2.5 rounded-xl border text-sm" style={{ borderColor: 'var(--g100)' }} />
           </label>
         </div>
       </details>
-      {err && <p className="text-sm" style={{ color: 'var(--tang-mid)' }}>{err}</p>}
-      <button type="submit" disabled={loading || !file}
-        className="px-5 py-2.5 rounded-xl font-bold text-sm text-white disabled:opacity-50"
-        style={{ background: 'var(--plum)' }}>
+      {err && <p className="text-sm font-medium" style={{ color: 'var(--tang-mid)' }}>{err}</p>}
+      <Button type="submit" disabled={!file} loading={loading} variant="primary" size="lg">
         {loading ? 'Extracting...' : 'Upload and extract'}
-      </button>
+      </Button>
     </form>
   )
 }
@@ -128,11 +141,11 @@ function ManualForm() {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4 rounded-2xl border p-6" style={{ borderColor: 'var(--g100)', background: 'white' }}>
+    <form onSubmit={submit} className="space-y-4 rounded-3xl border p-6" style={{ borderColor: 'var(--g100)', background: 'white' }}>
       <label className="block">
-        <span className="text-xs font-bold tracking-wider" style={{ color: 'var(--g600)' }}>TYPE</span>
+        <span className="text-[10px] font-bold tracking-[1.2px] uppercase" style={{ color: 'var(--g600)' }}>Type</span>
         <select value={form.type} onChange={(e) => update('type', e.target.value)}
-          className="mt-1 w-full px-3 py-2 rounded-lg border text-sm" style={{ borderColor: 'var(--g100)' }}>
+          className="mt-1.5 w-full px-3.5 py-2.5 rounded-xl border text-sm" style={{ borderColor: 'var(--g100)' }}>
           {CANONICAL_CREDENTIAL_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
         </select>
       </label>
@@ -144,10 +157,10 @@ function ManualForm() {
         <Field label="Expires at" type="date" value={form.expires_at} onChange={(v) => update('expires_at', v)} />
       </div>
       <Field label="Notes" value={form.notes} onChange={(v) => update('notes', v)} />
-      {err && <p className="text-sm" style={{ color: 'var(--tang-mid)' }}>{err}</p>}
-      <button type="submit" disabled={loading} className="px-5 py-2.5 rounded-xl font-bold text-sm text-white disabled:opacity-50" style={{ background: 'var(--plum)' }}>
+      {err && <p className="text-sm font-medium" style={{ color: 'var(--tang-mid)' }}>{err}</p>}
+      <Button type="submit" loading={loading} variant="primary" size="lg">
         {loading ? 'Saving...' : 'Save credential'}
-      </button>
+      </Button>
     </form>
   )
 }
@@ -155,9 +168,9 @@ function ManualForm() {
 function Field({ label, value, onChange, type = 'text', placeholder }: { label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string }) {
   return (
     <label className="block">
-      <span className="text-xs font-bold tracking-wider" style={{ color: 'var(--g600)' }}>{label.toUpperCase()}</span>
+      <span className="text-[10px] font-bold tracking-[1.2px] uppercase" style={{ color: 'var(--g600)' }}>{label}</span>
       <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
-        className="mt-1 w-full px-3 py-2 rounded-lg border text-sm" style={{ borderColor: 'var(--g100)' }} />
+        className="mt-1.5 w-full px-3.5 py-2.5 rounded-xl border text-sm transition-colors focus:outline-none focus:border-[var(--plum)]" style={{ borderColor: 'var(--g100)' }} />
     </label>
   )
 }

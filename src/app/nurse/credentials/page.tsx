@@ -3,8 +3,14 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import Navbar from '@/components/layout/Navbar'
+import PageHero from '@/components/ui/PageHero'
+import StatCard from '@/components/ui/StatCard'
+import EmptyState from '@/components/ui/EmptyState'
+import SectionHeader from '@/components/ui/SectionHeader'
+import Button from '@/components/ui/Button'
 import CredentialCard from '@/components/credentials/CredentialCard'
 import { freshnessFor, type CredentialRow } from '@/lib/ledger/credentials/types'
+import { ShieldCheck } from 'lucide-react'
 
 export default async function NurseCredentialsPage() {
   const supabase = await createClient()
@@ -26,31 +32,37 @@ export default async function NurseCredentialsPage() {
   return (
     <div className="flex flex-col min-h-screen" style={{ background: 'var(--cream)' }}>
       <Navbar userRole="nurse" userName={user.email?.split('@')[0]} />
-      <main className="max-w-[1100px] mx-auto w-full px-4 sm:px-8 py-10">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="font-display text-4xl" style={{ color: 'var(--ink)' }}>Credentialing Wallet</h1>
-            <p className="text-sm mt-2" style={{ color: 'var(--g600)' }}>Upload your certifications once. We track expirations and cross-reference what each contract requires.</p>
+      <main className="max-w-[1100px] mx-auto w-full px-4 sm:px-8 py-10 lg:py-14">
+        <PageHero
+          eyebrow="Credentialing Wallet"
+          title="Upload once,"
+          titleAccent="renew on time."
+          subtitle="Track BLS, ACLS, vaccinations, fit tests, and licenses in one place. We extract expiration dates from the document and email you when renewals approach."
+          actions={<Link href="/nurse/credentials/new"><Button variant="tang" size="md">Add credential</Button></Link>}
+        />
+
+        {credentials.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
+            <StatCard label="Total credentials" value={credentials.length} tone="plum" />
+            <StatCard label="Active" value={active.length} tone={active.length > 0 ? 'success' : 'default'} />
+            <StatCard label="Expiring soon" value={expiring.length} tone={expiring.length > 0 ? 'warning' : 'default'} sub="within 60 days" />
+            <StatCard label="Expired" value={expired.length} tone={expired.length > 0 ? 'danger' : 'default'} />
           </div>
-          <Link href="/nurse/credentials/new" className="px-5 py-2.5 rounded-xl font-bold text-sm text-white no-underline" style={{ background: 'var(--tang)' }}>
-            Add credential
-          </Link>
-        </div>
+        )}
 
         {credentials.length === 0 ? (
-          <div className="rounded-3xl border-2 border-dashed p-12 text-center" style={{ borderColor: 'var(--g200)' }}>
-            <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--ink)' }}>No credentials yet</h2>
-            <p className="text-sm mb-6" style={{ color: 'var(--g600)' }}>Upload a PDF of your BLS, ACLS, RN license, or any other certification. We will extract the expiration date automatically.</p>
-            <Link href="/nurse/credentials/new" className="px-5 py-2.5 rounded-xl font-bold text-sm text-white no-underline" style={{ background: 'var(--tang)' }}>
-              Add your first credential
-            </Link>
-          </div>
+          <EmptyState
+            icon={<ShieldCheck className="w-6 h-6" />}
+            title="No credentials yet"
+            description="Upload a PDF of your BLS, ACLS, RN license, or any other certification. We extract the expiration automatically."
+            action={<Link href="/nurse/credentials/new"><Button variant="tang" size="md">Add your first credential</Button></Link>}
+          />
         ) : (
-          <div className="space-y-8">
-            {expired.length > 0 && <Section title={`Expired (${expired.length})`} items={expired} />}
-            {expiring.length > 0 && <Section title={`Expiring within 60 days (${expiring.length})`} items={expiring} />}
-            {active.length > 0 && <Section title={`Active (${active.length})`} items={active} />}
-            {undated.length > 0 && <Section title={`No expiration on file (${undated.length})`} items={undated} />}
+          <div className="space-y-10">
+            {expired.length > 0 && <Section title="Expired" eyebrow="action needed" items={expired} />}
+            {expiring.length > 0 && <Section title="Expiring within 60 days" eyebrow="renew soon" items={expiring} />}
+            {active.length > 0 && <Section title="Active" eyebrow="all good" items={active} />}
+            {undated.length > 0 && <Section title="No expiration on file" eyebrow="metadata only" items={undated} />}
           </div>
         )}
       </main>
@@ -58,10 +70,10 @@ export default async function NurseCredentialsPage() {
   )
 }
 
-function Section({ title, items }: { title: string; items: CredentialRow[] }) {
+function Section({ title, eyebrow, items }: { title: string; eyebrow: string; items: CredentialRow[] }) {
   return (
     <section>
-      <h2 className="text-sm font-bold tracking-wider mb-3" style={{ color: 'var(--g600)' }}>{title.toUpperCase()}</h2>
+      <SectionHeader eyebrow={eyebrow} title={`${title} · ${items.length}`} />
       <div className="grid gap-3">
         {items.map((c) => <CredentialCard key={c.id} credential={c} />)}
       </div>
