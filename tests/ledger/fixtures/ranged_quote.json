@@ -1,0 +1,31 @@
+{
+  "name": "ranged_quote",
+  "sourceType": "email",
+  "input": "Hi - rough numbers for that Denver L&D role: pay range $34 to $38/hr depending on experience, weekly stipends combined $1800 to $2000. 13 weeks starting around 9/15. Day shifts. BLS + NRP required.",
+  "expected": {
+    "taxable_hourly_rate_cents": 3600,
+    "weekly_housing_stipend_cents": null,
+    "weekly_meals_stipend_cents": null,
+    "weekly_travel_stipend_cents": null,
+    "weekly_gross_estimate_cents": null,
+    "weekly_net_estimate_cents": null,
+    "guaranteed_hours_per_week": null,
+    "shift_type": "day",
+    "shift_length_hours": null,
+    "start_date": "2026-09-15",
+    "end_date": null,
+    "contract_length_weeks": 13,
+    "location_city": "Denver",
+    "location_state": "CO",
+    "facility_name": null,
+    "specialty": "L&D",
+    "sign_on_bonus_cents": null,
+    "completion_bonus_cents": null,
+    "cancellation_terms": null,
+    "overtime_rate_cents": null,
+    "holiday_pay": null,
+    "required_credentials": ["BLS", "NRP"],
+    "extraction_confidence": 0.45,
+    "raw_notes": "Hourly range $34-$38 (used midpoint $36). Combined weekly stipends $1800-$2000 stated; not broken down by housing/meals/travel so left null."
+  }
+}

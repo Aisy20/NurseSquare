@@ -1,0 +1,31 @@
+{
+  "name": "partial_voice",
+  "sourceType": "voice",
+  "input": "yeah so the package is around three thousand a week gross, ICU in uh tampa I think, starts mid-october, 13 weeks. they mentioned a sign-on but didn't say how much. cancel terms uh I forget. nights I think.",
+  "expected": {
+    "taxable_hourly_rate_cents": null,
+    "weekly_housing_stipend_cents": null,
+    "weekly_meals_stipend_cents": null,
+    "weekly_travel_stipend_cents": null,
+    "weekly_gross_estimate_cents": 300000,
+    "weekly_net_estimate_cents": null,
+    "guaranteed_hours_per_week": null,
+    "shift_type": "night",
+    "shift_length_hours": null,
+    "start_date": null,
+    "end_date": null,
+    "contract_length_weeks": 13,
+    "location_city": "Tampa",
+    "location_state": "FL",
+    "facility_name": null,
+    "specialty": "ICU",
+    "sign_on_bonus_cents": null,
+    "completion_bonus_cents": null,
+    "cancellation_terms": null,
+    "overtime_rate_cents": null,
+    "holiday_pay": null,
+    "required_credentials": [],
+    "extraction_confidence": 0.3,
+    "raw_notes": "Voice transcript with significant gaps. Sign-on mentioned without amount; cancellation forgotten by speaker."
+  }
+}

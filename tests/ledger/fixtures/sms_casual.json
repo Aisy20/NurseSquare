@@ -1,0 +1,31 @@
+{
+  "name": "sms_casual",
+  "sourceType": "sms",
+  "input": "ICU contract Phoenix AZ 9/8 to 12/1. $34/hr taxable, $1500/wk housing, $300/wk meals. 36hr/wk nights 3x12s.",
+  "expected": {
+    "taxable_hourly_rate_cents": 3400,
+    "weekly_housing_stipend_cents": 150000,
+    "weekly_meals_stipend_cents": 30000,
+    "weekly_travel_stipend_cents": null,
+    "weekly_gross_estimate_cents": null,
+    "weekly_net_estimate_cents": null,
+    "guaranteed_hours_per_week": 36,
+    "shift_type": "night",
+    "shift_length_hours": 12,
+    "start_date": "2026-09-08",
+    "end_date": "2026-12-01",
+    "contract_length_weeks": 12,
+    "location_city": "Phoenix",
+    "location_state": "AZ",
+    "facility_name": null,
+    "specialty": "ICU",
+    "sign_on_bonus_cents": null,
+    "completion_bonus_cents": null,
+    "cancellation_terms": null,
+    "overtime_rate_cents": null,
+    "holiday_pay": null,
+    "required_credentials": [],
+    "extraction_confidence": 0.5,
+    "raw_notes": "No facility, no bonuses, no cancellation terms mentioned."
+  }
+}

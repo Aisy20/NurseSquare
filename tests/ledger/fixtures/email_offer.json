@@ -1,0 +1,31 @@
+{
+  "name": "email_offer",
+  "sourceType": "email",
+  "input": "Subject: Offer - Cardiac ICU - Nashville TN\n\nHi,\n\nFormal offer for a 13-week Cardiac ICU contract at Vanderbilt UMC, Nashville, TN:\n\n- Taxable: $40/hr\n- Weekly housing: $1700\n- Weekly meals: $385\n- Weekly travel: $250\n- 36hr guaranteed, 3x12 nights\n- Start 8/4/2026, end 11/2/2026\n- Sign-on: $2000 paid first check\n- Completion: $2500\n- OT after 40 at $60/hr\n- Cancel: 14 days written notice\n- Required: BLS, ACLS, CCRN\n\n- Mark",
+  "expected": {
+    "taxable_hourly_rate_cents": 4000,
+    "weekly_housing_stipend_cents": 170000,
+    "weekly_meals_stipend_cents": 38500,
+    "weekly_travel_stipend_cents": 25000,
+    "weekly_gross_estimate_cents": null,
+    "weekly_net_estimate_cents": null,
+    "guaranteed_hours_per_week": 36,
+    "shift_type": "night",
+    "shift_length_hours": 12,
+    "start_date": "2026-08-04",
+    "end_date": "2026-11-02",
+    "contract_length_weeks": 13,
+    "location_city": "Nashville",
+    "location_state": "TN",
+    "facility_name": "Vanderbilt UMC",
+    "specialty": "Cardiac ICU",
+    "sign_on_bonus_cents": 200000,
+    "completion_bonus_cents": 250000,
+    "cancellation_terms": "14 days written notice",
+    "overtime_rate_cents": 6000,
+    "holiday_pay": null,
+    "required_credentials": ["BLS", "ACLS", "CCRN"],
+    "extraction_confidence": 0.93,
+    "raw_notes": null
+  }
+}

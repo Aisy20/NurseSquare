@@ -1,0 +1,31 @@
+{
+  "name": "signed_contract",
+  "sourceType": "manual",
+  "input": "TRAVEL NURSE STAFFING AGREEMENT\nFacility: Vanderbilt UMC, Nashville, TN\nSpecialty: Cardiac ICU\nTerm: 4 August 2026 through 2 November 2026 (13 weeks)\nPosition: Registered Nurse, 12-hour night shifts, 3 shifts/wk (36 hr guaranteed)\nCompensation:\n  Taxable hourly: $40.00\n  Weekly housing: $1,500.00\n  Weekly meals: $385.00\n  Weekly travel: $250.00\n  Sign-on bonus: $1,000.00 (reduced per amendment 7/28)\n  Completion bonus: $2,500.00 contingent on full completion\nOvertime: 1.5x base after 40 ($60.00/hr)\nCancellation: 48 hours written notice from either party. Bonuses forfeited on early termination by traveler.\nRequired credentials: BLS, ACLS, CCRN.",
+  "expected": {
+    "taxable_hourly_rate_cents": 4000,
+    "weekly_housing_stipend_cents": 150000,
+    "weekly_meals_stipend_cents": 38500,
+    "weekly_travel_stipend_cents": 25000,
+    "weekly_gross_estimate_cents": null,
+    "weekly_net_estimate_cents": null,
+    "guaranteed_hours_per_week": 36,
+    "shift_type": "night",
+    "shift_length_hours": 12,
+    "start_date": "2026-08-04",
+    "end_date": "2026-11-02",
+    "contract_length_weeks": 13,
+    "location_city": "Nashville",
+    "location_state": "TN",
+    "facility_name": "Vanderbilt UMC",
+    "specialty": "Cardiac ICU",
+    "sign_on_bonus_cents": 100000,
+    "completion_bonus_cents": 250000,
+    "cancellation_terms": "48 hours written notice from either party. Bonuses forfeited on early termination by traveler.",
+    "overtime_rate_cents": 6000,
+    "holiday_pay": null,
+    "required_credentials": ["BLS", "ACLS", "CCRN"],
+    "extraction_confidence": 0.95,
+    "raw_notes": "Sign-on bonus reduced per amendment 7/28."
+  }
+}
