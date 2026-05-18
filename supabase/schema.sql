@@ -456,3 +456,434 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER after_review_insert
   AFTER INSERT ON reviews
   FOR EACH ROW EXECUTE FUNCTION update_nurse_rating();
+
+-- ============================================================
+-- ============================================================
+-- PAY-PACKAGE LEDGER (Module 1)
+-- All currency stored as INTEGER cents. All timestamps UTC.
+-- ============================================================
+-- ============================================================
+
+-- Additive user columns for ledger inbound channels + tax home (Module 3 hook).
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS forwarding_email TEXT UNIQUE,
+  ADD COLUMN IF NOT EXISTS forwarding_sms_number TEXT UNIQUE,
+  ADD COLUMN IF NOT EXISTS tax_home_state TEXT;
+
+-- ------------------------------------------------------------
+-- ledger_agencies
+-- ------------------------------------------------------------
+CREATE TABLE ledger_agencies (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  normalized_name TEXT NOT NULL UNIQUE,
+  aggregate_score NUMERIC(3,2) DEFAULT 0,
+  contract_count INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE ledger_agencies ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Authenticated can view agencies" ON ledger_agencies
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Admin manage agencies" ON ledger_agencies
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- ------------------------------------------------------------
+-- ledger_recruiters
+-- ------------------------------------------------------------
+CREATE TABLE ledger_recruiters (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  agency_id UUID REFERENCES ledger_agencies(id) ON DELETE SET NULL,
+  name TEXT NOT NULL,
+  email TEXT,
+  phone TEXT,
+  aggregate_score NUMERIC(3,2) DEFAULT 0,
+  contract_count INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX ledger_recruiters_agency_idx ON ledger_recruiters(agency_id);
+CREATE UNIQUE INDEX ledger_recruiters_email_idx ON ledger_recruiters(LOWER(email)) WHERE email IS NOT NULL;
+
+ALTER TABLE ledger_recruiters ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Authenticated can view recruiters" ON ledger_recruiters
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Admin manage recruiters" ON ledger_recruiters
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- ------------------------------------------------------------
+-- ledger_contracts
+-- placement_id (optional) links to existing placements row,
+-- giving the hospital read access to the diff for that placement.
+-- ------------------------------------------------------------
+CREATE TABLE ledger_contracts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  agency_id UUID REFERENCES ledger_agencies(id) ON DELETE SET NULL,
+  recruiter_id UUID REFERENCES ledger_recruiters(id) ON DELETE SET NULL,
+  placement_id UUID REFERENCES placements(id) ON DELETE SET NULL,
+  status TEXT NOT NULL DEFAULT 'open'
+    CHECK (status IN ('open', 'signed', 'completed', 'cancelled', 'archived')),
+  signed_at TIMESTAMPTZ,
+  start_date DATE,
+  end_date DATE,
+  location_city TEXT,
+  location_state CHAR(2),
+  specialty TEXT,
+  required_credentials JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX ledger_contracts_user_idx ON ledger_contracts(user_id);
+CREATE INDEX ledger_contracts_agency_idx ON ledger_contracts(agency_id);
+CREATE INDEX ledger_contracts_recruiter_idx ON ledger_contracts(recruiter_id);
+CREATE INDEX ledger_contracts_placement_idx ON ledger_contracts(placement_id);
+
+ALTER TABLE ledger_contracts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Nurses manage own ledger contracts" ON ledger_contracts
+  FOR ALL USING (auth.uid() = user_id);
+
+CREATE POLICY "Hospitals view linked-placement contracts" ON ledger_contracts
+  FOR SELECT USING (
+    placement_id IS NOT NULL AND EXISTS (
+      SELECT 1 FROM placements p
+      JOIN employer_profiles ep ON ep.id = p.employer_id
+      WHERE p.id = placement_id AND ep.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Admin full access ledger contracts" ON ledger_contracts
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+  );
+
+CREATE TRIGGER ledger_contracts_updated_at BEFORE UPDATE ON ledger_contracts
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ------------------------------------------------------------
+-- ledger_quotes
+-- ------------------------------------------------------------
+CREATE TABLE ledger_quotes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  contract_id UUID NOT NULL REFERENCES ledger_contracts(id) ON DELETE CASCADE,
+  source_type TEXT NOT NULL CHECK (source_type IN ('email', 'sms', 'voice', 'manual')),
+  raw_content TEXT NOT NULL,
+  extracted_payload JSONB,
+  received_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  confidence_score NUMERIC(3,2),
+  requires_review BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX ledger_quotes_contract_idx ON ledger_quotes(contract_id);
+CREATE INDEX ledger_quotes_received_idx ON ledger_quotes(received_at DESC);
+
+ALTER TABLE ledger_quotes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Nurses manage own quotes" ON ledger_quotes
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM ledger_contracts c
+      WHERE c.id = contract_id AND c.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Hospitals view linked quotes" ON ledger_quotes
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM ledger_contracts c
+      JOIN placements p ON p.id = c.placement_id
+      JOIN employer_profiles ep ON ep.id = p.employer_id
+      WHERE c.id = contract_id AND ep.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Admin full access quotes" ON ledger_quotes
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- ------------------------------------------------------------
+-- ledger_signed_contracts
+-- ------------------------------------------------------------
+CREATE TABLE ledger_signed_contracts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  contract_id UUID NOT NULL UNIQUE REFERENCES ledger_contracts(id) ON DELETE CASCADE,
+  pdf_url TEXT NOT NULL,
+  extracted_payload JSONB,
+  confidence_score NUMERIC(3,2),
+  parsed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE ledger_signed_contracts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Nurses manage own signed contracts" ON ledger_signed_contracts
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM ledger_contracts c
+      WHERE c.id = contract_id AND c.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Hospitals view linked signed contracts" ON ledger_signed_contracts
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM ledger_contracts c
+      JOIN placements p ON p.id = c.placement_id
+      JOIN employer_profiles ep ON ep.id = p.employer_id
+      WHERE c.id = contract_id AND ep.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Admin full access signed contracts" ON ledger_signed_contracts
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- ------------------------------------------------------------
+-- ledger_diffs
+-- ------------------------------------------------------------
+CREATE TABLE ledger_diffs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  contract_id UUID NOT NULL REFERENCES ledger_contracts(id) ON DELETE CASCADE,
+  quote_id UUID NOT NULL REFERENCES ledger_quotes(id) ON DELETE CASCADE,
+  signed_contract_id UUID NOT NULL REFERENCES ledger_signed_contracts(id) ON DELETE CASCADE,
+  field_deltas JSONB NOT NULL,
+  computed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(quote_id, signed_contract_id)
+);
+
+CREATE INDEX ledger_diffs_contract_idx ON ledger_diffs(contract_id);
+
+ALTER TABLE ledger_diffs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Nurses view own diffs" ON ledger_diffs
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM ledger_contracts c
+      WHERE c.id = contract_id AND c.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Hospitals view linked diffs" ON ledger_diffs
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM ledger_contracts c
+      JOIN placements p ON p.id = c.placement_id
+      JOIN employer_profiles ep ON ep.id = p.employer_id
+      WHERE c.id = contract_id AND ep.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Admin full access diffs" ON ledger_diffs
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- ------------------------------------------------------------
+-- ledger_share_links
+-- Public read by slug (anon allowed). Owner can create.
+-- ------------------------------------------------------------
+CREATE TABLE ledger_share_links (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  diff_id UUID NOT NULL REFERENCES ledger_diffs(id) ON DELETE CASCADE,
+  slug TEXT NOT NULL UNIQUE,
+  created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  expires_at TIMESTAMPTZ,
+  view_count INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX ledger_share_links_diff_idx ON ledger_share_links(diff_id);
+
+ALTER TABLE ledger_share_links ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can read share links by slug" ON ledger_share_links
+  FOR SELECT USING (
+    expires_at IS NULL OR expires_at > NOW()
+  );
+
+CREATE POLICY "Owners can create share links" ON ledger_share_links
+  FOR INSERT WITH CHECK (
+    auth.uid() = created_by AND EXISTS (
+      SELECT 1 FROM ledger_diffs d
+      JOIN ledger_contracts c ON c.id = d.contract_id
+      WHERE d.id = diff_id AND c.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Owners can delete share links" ON ledger_share_links
+  FOR DELETE USING (auth.uid() = created_by);
+
+-- ------------------------------------------------------------
+-- ledger_recruiter_ratings
+-- ------------------------------------------------------------
+CREATE TABLE ledger_recruiter_ratings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  recruiter_id UUID NOT NULL REFERENCES ledger_recruiters(id) ON DELETE CASCADE,
+  contract_id UUID REFERENCES ledger_contracts(id) ON DELETE SET NULL,
+  accuracy_score INTEGER NOT NULL CHECK (accuracy_score BETWEEN 1 AND 5),
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, recruiter_id, contract_id)
+);
+
+CREATE INDEX ledger_recruiter_ratings_recruiter_idx ON ledger_recruiter_ratings(recruiter_id);
+
+ALTER TABLE ledger_recruiter_ratings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Authenticated can view recruiter ratings" ON ledger_recruiter_ratings
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Owners can manage own ratings" ON ledger_recruiter_ratings
+  FOR ALL USING (auth.uid() = user_id);
+
+-- ------------------------------------------------------------
+-- ledger_llm_calls
+-- Cost / latency monitoring for every Claude call.
+-- ------------------------------------------------------------
+CREATE TABLE ledger_llm_calls (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  contract_id UUID REFERENCES ledger_contracts(id) ON DELETE SET NULL,
+  purpose TEXT NOT NULL CHECK (purpose IN ('extract_quote', 'extract_signed', 'diff_text')),
+  model TEXT NOT NULL,
+  prompt_tokens INTEGER,
+  completion_tokens INTEGER,
+  cache_read_tokens INTEGER,
+  cache_creation_tokens INTEGER,
+  latency_ms INTEGER,
+  status TEXT NOT NULL CHECK (status IN ('ok', 'rate_limited', 'error')),
+  error_message TEXT,
+  called_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX ledger_llm_calls_called_idx ON ledger_llm_calls(called_at DESC);
+
+ALTER TABLE ledger_llm_calls ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admin view llm calls" ON ledger_llm_calls
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- ------------------------------------------------------------
+-- credentials (Module 2 stub)
+-- Populated by the extractor when recruiter mentions BLS/ACLS/PALS/etc.
+-- ------------------------------------------------------------
+CREATE TABLE credentials (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'verified', 'expired', 'rejected')),
+  expires_at DATE,
+  document_url TEXT,
+  verification_source TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX credentials_user_idx ON credentials(user_id);
+
+ALTER TABLE credentials ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users manage own credentials" ON credentials
+  FOR ALL USING (auth.uid() = user_id);
+
+CREATE POLICY "Admin full access credentials" ON credentials
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+  );
+
+CREATE TRIGGER credentials_updated_at BEFORE UPDATE ON credentials
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ------------------------------------------------------------
+-- TRIGGER: recompute recruiter + agency aggregate scores
+-- ------------------------------------------------------------
+CREATE OR REPLACE FUNCTION update_ledger_recruiter_aggregates()
+RETURNS TRIGGER AS $$
+DECLARE
+  rid UUID;
+  aid UUID;
+BEGIN
+  rid := COALESCE(NEW.recruiter_id, OLD.recruiter_id);
+
+  UPDATE ledger_recruiters
+  SET
+    aggregate_score = COALESCE((
+      SELECT AVG(accuracy_score)::NUMERIC(3,2)
+      FROM ledger_recruiter_ratings
+      WHERE recruiter_id = rid
+    ), 0),
+    contract_count = (
+      SELECT COUNT(DISTINCT contract_id)
+      FROM ledger_recruiter_ratings
+      WHERE recruiter_id = rid AND contract_id IS NOT NULL
+    )
+  WHERE id = rid
+  RETURNING agency_id INTO aid;
+
+  IF aid IS NOT NULL THEN
+    UPDATE ledger_agencies
+    SET
+      aggregate_score = COALESCE((
+        SELECT AVG(r.aggregate_score)::NUMERIC(3,2)
+        FROM ledger_recruiters r
+        WHERE r.agency_id = aid AND r.contract_count > 0
+      ), 0),
+      contract_count = COALESCE((
+        SELECT SUM(r.contract_count)
+        FROM ledger_recruiters r
+        WHERE r.agency_id = aid
+      ), 0)
+    WHERE id = aid;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER after_ledger_recruiter_rating
+  AFTER INSERT OR UPDATE OR DELETE ON ledger_recruiter_ratings
+  FOR EACH ROW EXECUTE FUNCTION update_ledger_recruiter_aggregates();
+
+-- ------------------------------------------------------------
+-- Public share access: allow anonymous reads of ledger_diffs
+-- when an active (non-expired) share_link points to them.
+-- ------------------------------------------------------------
+CREATE POLICY "Public read shared diffs" ON ledger_diffs
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM ledger_share_links sl
+      WHERE sl.diff_id = id
+        AND (sl.expires_at IS NULL OR sl.expires_at > NOW())
+    )
+  );
+
+-- Atomic, anon-safe view_count increment. Returns the link row (RLS still
+-- restricts which slug rows are visible).
+CREATE OR REPLACE FUNCTION increment_ledger_share_view(p_slug TEXT)
+RETURNS ledger_share_links AS $$
+  UPDATE ledger_share_links
+  SET view_count = view_count + 1
+  WHERE slug = p_slug
+    AND (expires_at IS NULL OR expires_at > NOW())
+  RETURNING *;
+$$ LANGUAGE sql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION increment_ledger_share_view(TEXT) TO anon, authenticated;
+
