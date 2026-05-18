@@ -9,12 +9,17 @@ function emptyDeltas(): FieldDeltas {
   const date = { quoted: null, signed: null, days_shifted: null, flag: 'unknown' as const }
   return {
     taxable_hourly_rate_cents: num, weekly_housing_stipend_cents: num, weekly_meals_stipend_cents: num,
-    weekly_travel_stipend_cents: num, weekly_gross_estimate_cents: num, weekly_net_estimate_cents: num,
+    weekly_travel_stipend_cents: num,
+    one_time_travel_reimbursement_cents: num, one_time_return_reimbursement_cents: num,
+    weekly_gross_estimate_cents: num, weekly_net_estimate_cents: num,
+    weekly_net_estimate_cents_low: num, weekly_net_estimate_cents_high: num,
     guaranteed_hours_per_week: num, sign_on_bonus_cents: num, completion_bonus_cents: num,
+    extension_bonus_cents: num, referral_bonus_cents_min: num, referral_bonus_cents_max: num,
     overtime_rate_cents: num, contract_length_weeks: num, shift_length_hours: num,
     start_date: date, end_date: date,
     shift_type: cat, location_city: cat, location_state: cat, facility_name: cat, specialty: cat,
-    cancellation_terms: txt, holiday_pay: txt,
+    overtime_basis: cat,
+    cancellation_terms: txt, call_off_policy: txt, floating_policy: txt, holiday_pay: txt,
     any_worse: false, any_material_change: false,
   }
 }

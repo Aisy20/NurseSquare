@@ -42,11 +42,18 @@ export interface FieldDeltas {
   weekly_housing_stipend_cents: NumericDelta
   weekly_meals_stipend_cents: NumericDelta
   weekly_travel_stipend_cents: NumericDelta
+  one_time_travel_reimbursement_cents: NumericDelta
+  one_time_return_reimbursement_cents: NumericDelta
   weekly_gross_estimate_cents: NumericDelta
   weekly_net_estimate_cents: NumericDelta
+  weekly_net_estimate_cents_low: NumericDelta
+  weekly_net_estimate_cents_high: NumericDelta
   guaranteed_hours_per_week: NumericDelta
   sign_on_bonus_cents: NumericDelta
   completion_bonus_cents: NumericDelta
+  extension_bonus_cents: NumericDelta
+  referral_bonus_cents_min: NumericDelta
+  referral_bonus_cents_max: NumericDelta
   overtime_rate_cents: NumericDelta
   contract_length_weeks: NumericDelta
   shift_length_hours: NumericDelta
@@ -57,7 +64,10 @@ export interface FieldDeltas {
   location_state: CategoricalDelta
   facility_name: CategoricalDelta
   specialty: CategoricalDelta
+  overtime_basis: CategoricalDelta
   cancellation_terms: TextDelta
+  call_off_policy: TextDelta
+  floating_policy: TextDelta
   holiday_pay: TextDelta
   any_worse: boolean
   any_material_change: boolean
@@ -68,11 +78,18 @@ const MONEY_FIELDS_WORSE_WHEN_SMALLER: Array<keyof PayPackage> = [
   'weekly_housing_stipend_cents',
   'weekly_meals_stipend_cents',
   'weekly_travel_stipend_cents',
+  'one_time_travel_reimbursement_cents',
+  'one_time_return_reimbursement_cents',
   'weekly_gross_estimate_cents',
   'weekly_net_estimate_cents',
+  'weekly_net_estimate_cents_low',
+  'weekly_net_estimate_cents_high',
   'guaranteed_hours_per_week',
   'sign_on_bonus_cents',
   'completion_bonus_cents',
+  'extension_bonus_cents',
+  'referral_bonus_cents_min',
+  'referral_bonus_cents_max',
   'overtime_rate_cents',
 ]
 
@@ -84,8 +101,14 @@ const CATEGORICAL_FIELDS: Array<keyof PayPackage> = [
   'location_state',
   'facility_name',
   'specialty',
+  'overtime_basis',
 ]
-const TEXT_FIELDS: Array<keyof PayPackage> = ['cancellation_terms', 'holiday_pay']
+const TEXT_FIELDS: Array<keyof PayPackage> = [
+  'cancellation_terms',
+  'call_off_policy',
+  'floating_policy',
+  'holiday_pay',
+]
 
 function diffNumeric(quoted: number | null, signed: number | null, worseWhenSmaller: boolean): NumericDelta {
   if (quoted == null && signed == null) {

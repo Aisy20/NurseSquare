@@ -24,8 +24,12 @@ const PAY_PACKAGE_TOOL: Anthropic.Tool = {
       weekly_housing_stipend_cents: { type: ['integer', 'null'] },
       weekly_meals_stipend_cents: { type: ['integer', 'null'] },
       weekly_travel_stipend_cents: { type: ['integer', 'null'] },
+      one_time_travel_reimbursement_cents: { type: ['integer', 'null'] },
+      one_time_return_reimbursement_cents: { type: ['integer', 'null'] },
       weekly_gross_estimate_cents: { type: ['integer', 'null'] },
       weekly_net_estimate_cents: { type: ['integer', 'null'] },
+      weekly_net_estimate_cents_low: { type: ['integer', 'null'] },
+      weekly_net_estimate_cents_high: { type: ['integer', 'null'] },
       guaranteed_hours_per_week: { type: ['integer', 'null'] },
       shift_type: {
         type: ['string', 'null'],
@@ -41,8 +45,17 @@ const PAY_PACKAGE_TOOL: Anthropic.Tool = {
       specialty: { type: ['string', 'null'] },
       sign_on_bonus_cents: { type: ['integer', 'null'] },
       completion_bonus_cents: { type: ['integer', 'null'] },
+      extension_bonus_cents: { type: ['integer', 'null'] },
+      referral_bonus_cents_min: { type: ['integer', 'null'] },
+      referral_bonus_cents_max: { type: ['integer', 'null'] },
       cancellation_terms: { type: ['string', 'null'] },
+      call_off_policy: { type: ['string', 'null'] },
+      floating_policy: { type: ['string', 'null'] },
       overtime_rate_cents: { type: ['integer', 'null'] },
+      overtime_basis: {
+        type: ['string', 'null'],
+        enum: ['taxable_hourly', 'blended', 'unknown', null],
+      },
       holiday_pay: { type: ['string', 'null'] },
       required_credentials: { type: 'array', items: { type: 'string' } },
       extraction_confidence: { type: 'number', minimum: 0, maximum: 1 },
@@ -53,8 +66,12 @@ const PAY_PACKAGE_TOOL: Anthropic.Tool = {
       'weekly_housing_stipend_cents',
       'weekly_meals_stipend_cents',
       'weekly_travel_stipend_cents',
+      'one_time_travel_reimbursement_cents',
+      'one_time_return_reimbursement_cents',
       'weekly_gross_estimate_cents',
       'weekly_net_estimate_cents',
+      'weekly_net_estimate_cents_low',
+      'weekly_net_estimate_cents_high',
       'guaranteed_hours_per_week',
       'shift_type',
       'shift_length_hours',
@@ -67,8 +84,14 @@ const PAY_PACKAGE_TOOL: Anthropic.Tool = {
       'specialty',
       'sign_on_bonus_cents',
       'completion_bonus_cents',
+      'extension_bonus_cents',
+      'referral_bonus_cents_min',
+      'referral_bonus_cents_max',
       'cancellation_terms',
+      'call_off_policy',
+      'floating_policy',
       'overtime_rate_cents',
+      'overtime_basis',
       'holiday_pay',
       'required_credentials',
       'extraction_confidence',
@@ -152,7 +175,7 @@ export async function extractPayPackage(input: ExtractInput): Promise<ExtractRes
     try {
       const response = await client.messages.create({
         model,
-        max_tokens: 1500,
+        max_tokens: 2000,
         system: [
           {
             type: 'text',
@@ -237,7 +260,7 @@ export async function extractPayPackageFromPdf(input: ExtractPdfInput): Promise<
   try {
     const response = await client.messages.create({
       model,
-      max_tokens: 2000,
+      max_tokens: 2500,
       system: [
         {
           type: 'text',

@@ -6,11 +6,18 @@ const NUMERIC_LABELS: Record<string, string> = {
   weekly_housing_stipend_cents: 'Weekly housing',
   weekly_meals_stipend_cents: 'Weekly meals',
   weekly_travel_stipend_cents: 'Weekly travel',
+  one_time_travel_reimbursement_cents: 'Travel reimbursement (outbound, one-time)',
+  one_time_return_reimbursement_cents: 'Return reimbursement (one-time)',
   weekly_gross_estimate_cents: 'Weekly gross',
   weekly_net_estimate_cents: 'Weekly net',
+  weekly_net_estimate_cents_low: 'Weekly net (low)',
+  weekly_net_estimate_cents_high: 'Weekly net (high)',
   guaranteed_hours_per_week: 'Guaranteed hrs/wk',
   sign_on_bonus_cents: 'Sign-on bonus',
   completion_bonus_cents: 'Completion bonus',
+  extension_bonus_cents: 'Extension bonus',
+  referral_bonus_cents_min: 'Referral bonus (min)',
+  referral_bonus_cents_max: 'Referral bonus (max)',
   overtime_rate_cents: 'Overtime rate',
   contract_length_weeks: 'Length (weeks)',
   shift_length_hours: 'Shift length',
@@ -21,9 +28,12 @@ const CATEGORICAL_LABELS: Record<string, string> = {
   location_state: 'State',
   facility_name: 'Facility',
   specialty: 'Specialty',
+  overtime_basis: 'OT basis',
 }
 const TEXT_LABELS: Record<string, string> = {
   cancellation_terms: 'Cancellation terms',
+  call_off_policy: 'Call-off policy',
+  floating_policy: 'Floating policy',
   holiday_pay: 'Holiday pay',
 }
 
@@ -113,7 +123,24 @@ function TextBlock({ field, delta }: { field: string; delta: TextDelta }) {
 }
 
 export default function DiffView({ deltas }: { deltas: FieldDeltas }) {
-  const moneyFields = ['taxable_hourly_rate_cents', 'weekly_housing_stipend_cents', 'weekly_meals_stipend_cents', 'weekly_travel_stipend_cents', 'weekly_gross_estimate_cents', 'weekly_net_estimate_cents', 'sign_on_bonus_cents', 'completion_bonus_cents', 'overtime_rate_cents']
+  const moneyFields = [
+    'taxable_hourly_rate_cents',
+    'weekly_housing_stipend_cents',
+    'weekly_meals_stipend_cents',
+    'weekly_travel_stipend_cents',
+    'one_time_travel_reimbursement_cents',
+    'one_time_return_reimbursement_cents',
+    'weekly_gross_estimate_cents',
+    'weekly_net_estimate_cents',
+    'weekly_net_estimate_cents_low',
+    'weekly_net_estimate_cents_high',
+    'sign_on_bonus_cents',
+    'completion_bonus_cents',
+    'extension_bonus_cents',
+    'referral_bonus_cents_min',
+    'referral_bonus_cents_max',
+    'overtime_rate_cents',
+  ]
   const numericFields = ['guaranteed_hours_per_week', 'contract_length_weeks', 'shift_length_hours']
 
   return (
@@ -153,6 +180,8 @@ export default function DiffView({ deltas }: { deltas: FieldDeltas }) {
       </div>
 
       <TextBlock field="cancellation_terms" delta={deltas.cancellation_terms} />
+      <TextBlock field="call_off_policy" delta={deltas.call_off_policy} />
+      <TextBlock field="floating_policy" delta={deltas.floating_policy} />
       <TextBlock field="holiday_pay" delta={deltas.holiday_pay} />
     </div>
   )
