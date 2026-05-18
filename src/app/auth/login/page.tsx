@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -45,19 +46,38 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--cream)' }}>
-      {/* Left panel — brand */}
-      <div className="hidden lg:flex lg:w-[420px] flex-col justify-between p-12"
+      {/* Left panel — brand with photo backdrop */}
+      <div className="hidden lg:flex lg:w-[480px] relative flex-col justify-between p-12 overflow-hidden"
         style={{ background: 'var(--plum-deep)' }}>
-        <Logo inv />
-        <div>
-          <p className="font-display text-[32px] leading-snug text-white mb-4">
-            The platform that finally<br />works for nurses.
-          </p>
-          <p className="text-sm" style={{ color: 'var(--plum-100)' }}>
-            Direct hiring. Escrow pay. No middleman.
-          </p>
+        <Image
+          src="https://images.unsplash.com/photo-1559757175-5700dde675bc?w=1000&q=80&auto=format&fit=crop"
+          alt="Travel nurse in scrubs"
+          fill
+          priority
+          sizes="480px"
+          className="object-cover opacity-25"
+        />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(28,16,68,0.85) 0%, rgba(28,16,68,0.4) 50%, rgba(28,16,68,0.95) 100%)' }} />
+        <div className="relative z-10">
+          <Logo inv />
         </div>
-        <p className="text-xs" style={{ color: 'var(--g400)' }}>© {new Date().getFullYear()} NurseSquare</p>
+        <div className="relative z-10">
+          <p className="font-display text-[36px] leading-[1.1] text-white mb-4 tracking-tight">
+            The platform that finally<br />works <em className="italic" style={{ color: 'var(--tang)' }}>for nurses.</em>
+          </p>
+          <p className="text-sm leading-relaxed mb-6" style={{ color: 'var(--plum-100)' }}>
+            Direct hiring. Escrow pay. Bait-and-switch protection. No middleman.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {['Nursys verified', 'Checkr cleared', '48hr escrow'].map((tag) => (
+              <span key={tag} className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-md"
+                style={{ background: 'rgba(255,255,255,0.1)', color: 'var(--plum-100)' }}>
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+        <p className="relative z-10 text-xs" style={{ color: 'var(--g400)' }}>© {new Date().getFullYear()} NurseSquare</p>
       </div>
 
       {/* Right panel — form */}
