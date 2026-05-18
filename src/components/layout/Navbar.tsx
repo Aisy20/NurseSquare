@@ -70,6 +70,7 @@ export default function Navbar({ userRole, userName }: NavbarProps) {
   const nurseLinks = [
     { href: '/nurse/jobs', label: 'Find Jobs' },
     { href: '/nurse/applications', label: 'My Applications' },
+    { href: '/nurse/ledger', label: 'Pay Ledger' },
     { href: '/messages', label: 'Messages' },
     { href: '/nurse/payments', label: 'Payments' },
     { href: '/nurse/dashboard', label: 'Dashboard' },
@@ -89,6 +90,7 @@ export default function Navbar({ userRole, userName }: NavbarProps) {
     { href: '/admin/users', label: 'Users' },
     { href: '/admin/jobs', label: 'Jobs' },
     { href: '/admin/payments', label: 'Payments' },
+    { href: '/admin/ledger', label: 'Ledger Review' },
   ]
 
   const links = userRole === 'nurse' ? nurseLinks : userRole === 'hospital' ? hospitalLinks : userRole === 'admin' ? adminLinks : []
