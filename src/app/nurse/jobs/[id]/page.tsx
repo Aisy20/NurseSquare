@@ -31,9 +31,19 @@ export default function JobDetailPage() {
 
       const { data: j } = await supabase
         .from('job_postings')
-        .select('*, employer_profiles(org_name, city, state, type, address)')
+        .select('*')
         .eq('id', id as string)
         .single()
+      if (j) {
+        // Org info comes from the public_employers view (safe columns only),
+        // so the page works for anonymous visitors too.
+        const { data: emp } = await supabase
+          .from('public_employers')
+          .select('org_name, city, state, type')
+          .eq('id', j.employer_id)
+          .single()
+        j.employer_profiles = emp
+      }
       setJob(j)
 
       if (u) {

@@ -971,3 +971,27 @@ $$ LANGUAGE sql SECURITY DEFINER;
 
 GRANT EXECUTE ON FUNCTION increment_credential_share_view(TEXT) TO anon, authenticated;
 
+-- ============================================================
+-- PUBLIC EMPLOYER DIRECTORY (safe subset for the public job board)
+-- ============================================================
+-- The job board (/nurse/jobs) is browsable without an account. We want to
+-- show the hiring org's name/location, but employer_profiles also holds
+-- contact + billing fields (phone, address, stripe_customer_id) that must
+-- never be exposed to anon. RLS is row-level, not column-level, so instead
+-- of opening up the base table we expose ONLY safe columns through a view.
+--
+-- The view runs with its owner's privileges (security_invoker = false, the
+-- default) so it bypasses employer_profiles RLS, and it is scoped to
+-- employers that have at least one active posting — i.e. exactly the orgs
+-- whose names already appear on the public board.
+CREATE OR REPLACE VIEW public_employers
+WITH (security_invoker = false) AS
+  SELECT ep.id, ep.org_name, ep.type, ep.city, ep.state, ep.verified
+  FROM employer_profiles ep
+  WHERE EXISTS (
+    SELECT 1 FROM job_postings jp
+    WHERE jp.employer_id = ep.id AND jp.status = 'active'
+  );
+
+GRANT SELECT ON public_employers TO anon, authenticated;
+

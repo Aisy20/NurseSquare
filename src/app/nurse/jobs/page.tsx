@@ -37,7 +37,7 @@ export default async function NurseJobsPage({
 
   let query = supabase
     .from('job_postings')
-    .select('*, employer_profiles(org_name, city, state, type)')
+    .select('*')
     .eq('status', 'active')
     .order('created_at', { ascending: false })
 
@@ -45,7 +45,23 @@ export default async function NurseJobsPage({
   if (state) query = query.eq('state', state)
   if (q) query = query.ilike('title', `%${q}%`)
 
-  const { data: jobs } = await query
+  const { data: jobsData } = await query
+
+  // Resolve hiring-org info from the public_employers view (safe columns only),
+  // so anonymous visitors see org names without exposing employer_profiles.
+  const employerIds = [...new Set((jobsData ?? []).map((j: any) => j.employer_id))]
+  let employerMap: Record<string, any> = {}
+  if (employerIds.length) {
+    const { data: employers } = await supabase
+      .from('public_employers')
+      .select('id, org_name, city, state, type')
+      .in('id', employerIds)
+    employerMap = Object.fromEntries((employers ?? []).map((e: any) => [e.id, e]))
+  }
+  const jobs = (jobsData ?? []).map((j: any) => ({
+    ...j,
+    employer_profiles: employerMap[j.employer_id] ?? null,
+  }))
 
   return (
     <div className="flex flex-col min-h-screen" style={{ background: 'var(--cream)' }}>
