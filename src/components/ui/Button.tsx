@@ -14,20 +14,20 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || loading}
         className={cn(
-          'inline-flex items-center justify-center font-semibold rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed tracking-tight',
+          'focus-ring inline-flex items-center justify-center rounded-lg font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-50',
           {
-            'bg-[var(--plum)] text-white hover:bg-[var(--plum-mid)] focus:ring-[var(--plum)] hover:-translate-y-px': variant === 'primary',
-            'bg-[var(--cream-mid)] text-[var(--ink)] hover:bg-[var(--cream-deep)] focus:ring-[var(--g400)]': variant === 'secondary',
-            'border border-[var(--g200)] bg-white text-[var(--g800)] hover:border-[var(--plum)] hover:text-[var(--plum)] focus:ring-[var(--plum)]': variant === 'outline',
-            'text-[var(--g600)] hover:bg-[var(--cream-mid)] focus:ring-[var(--g400)]': variant === 'ghost',
-            'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500': variant === 'danger',
-            'bg-[var(--tang)] text-white hover:opacity-90 focus:ring-[var(--tang)] hover:-translate-y-px': variant === 'tang',
-            'border border-white/25 text-white hover:bg-white/10 focus:ring-white/30': variant === 'ghost-inv',
+            'bg-[var(--plum)] text-white shadow-[0_8px_18px_rgba(45,27,105,0.18)] hover:bg-[var(--plum-mid)] hover:-translate-y-px': variant === 'primary',
+            'bg-[var(--cream-mid)] text-[var(--ink)] hover:bg-[var(--cream-deep)]': variant === 'secondary',
+            'border border-[var(--g200)] bg-[var(--surface)] text-[var(--g800)] hover:border-[var(--plum)] hover:text-[var(--plum)]': variant === 'outline',
+            'text-[var(--g600)] hover:bg-[var(--cream-mid)] hover:text-[var(--ink)]': variant === 'ghost',
+            'bg-red-600 text-white hover:bg-red-700': variant === 'danger',
+            'bg-[var(--tang)] text-white shadow-[0_8px_18px_rgba(233,95,47,0.20)] hover:bg-[var(--tang-mid)] hover:-translate-y-px': variant === 'tang',
+            'border border-white/25 text-white hover:bg-white/10': variant === 'ghost-inv',
           },
           {
-            'px-3 py-1.5 text-sm': size === 'sm',
-            'px-4 py-2 text-sm': size === 'md',
-            'px-6 py-3 text-base': size === 'lg',
+            'px-3 py-1.5 text-xs': size === 'sm',
+            'px-4 py-2.5 text-sm': size === 'md',
+            'px-5 py-3 text-sm': size === 'lg',
           },
           className
         )}

@@ -1,85 +1,72 @@
 import Link from 'next/link'
-import { ArrowRight, Stethoscope, Building2, CheckCircle } from 'lucide-react'
+import { ArrowRight, Building2, CheckCircle, Stethoscope } from 'lucide-react'
 import { Logo } from '@/components/layout/Navbar'
+
+const choices = [
+  {
+    href: '/auth/register/nurse',
+    icon: Stethoscope,
+    title: 'Nurse workspace',
+    body: 'Join free, apply directly, track credentials, and compare offer terms before signing.',
+    cta: 'Join as a nurse',
+    tone: 'plum',
+    items: ['Free to join and apply', 'Direct access to hospitals', 'Credential wallet', 'Pay-package ledger'],
+  },
+  {
+    href: '/auth/register/hospital',
+    icon: Building2,
+    title: 'Hospital workspace',
+    body: 'Post roles, review verified clinicians, and manage placements without agency markup.',
+    cta: 'Start hiring',
+    tone: 'tang',
+    items: ['Verified nurse profiles', 'Background-check workflow', 'Escrow payment support', 'Applicant tracking'],
+  },
+] as const
 
 export default function RegisterChoicePage() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16"
-      style={{ background: 'var(--cream)' }}>
-      <div className="w-full max-w-2xl">
-        <div className="flex flex-col items-center mb-10">
+    <div className="surface-grid flex min-h-screen flex-col items-center justify-center bg-[var(--cream)] px-4 py-12">
+      <div className="w-full max-w-4xl">
+        <div className="mb-10 flex flex-col items-center text-center">
           <Logo />
-          <h1 className="font-display text-[32px] mt-6 mb-1" style={{ color: 'var(--ink)' }}>Join NurseSquare</h1>
-          <p className="text-sm" style={{ color: 'var(--g600)' }}>Choose how you&apos;ll use the platform</p>
+          <h1 className="mt-6 text-[34px] font-bold leading-tight text-[var(--ink)] md:text-[44px]">
+            Choose your NurseSquare workspace
+          </h1>
+          <p className="mt-2 max-w-xl text-sm leading-7 text-[var(--g600)]">
+            Nurses and hospitals use different tools, but both work from the same verified hiring and contract evidence layer.
+          </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-5">
-          {/* Nurse card */}
-          <Link href="/auth/register/nurse" className="no-underline group">
-            <div className="rounded-2xl border p-7 h-full transition-all hover:-translate-y-0.5 hover:shadow-xl"
-              style={{ background: 'white', borderColor: 'var(--g100)' }}>
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 transition-colors"
-                style={{ background: 'var(--plum-50)' }}>
-                <Stethoscope className="w-7 h-7" style={{ color: 'var(--plum)' }} />
-              </div>
-              <h2 className="font-display text-xl mb-2" style={{ color: 'var(--ink)' }}>I&apos;m a Nurse</h2>
-              <p className="text-sm mb-5 leading-relaxed" style={{ color: 'var(--g600)' }}>
-                Travel nurses and home care aides. Join free, apply directly, keep more of every dollar.
-              </p>
-              <div className="space-y-2.5 mb-6">
-                {[
-                  'Free to join & apply',
-                  'Direct access to hospitals',
-                  'Secure escrow payment',
-                  '1099 contractor positions',
-                ].map(item => (
-                  <div key={item} className="flex items-center gap-2 text-sm" style={{ color: 'var(--g600)' }}>
-                    <CheckCircle className="w-4 h-4 shrink-0" style={{ color: 'var(--sage)' }} />
-                    {item}
-                  </div>
-                ))}
-              </div>
-              <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--plum)' }}>
-                Join NurseSquare <ArrowRight className="w-4 h-4" />
-              </div>
-            </div>
-          </Link>
-
-          {/* Hospital card */}
-          <Link href="/auth/register/hospital" className="no-underline group">
-            <div className="rounded-2xl border p-7 h-full transition-all hover:-translate-y-0.5 hover:shadow-xl"
-              style={{ background: 'white', borderColor: 'var(--g100)' }}>
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 transition-colors"
-                style={{ background: 'var(--tang-50)' }}>
-                <Building2 className="w-7 h-7" style={{ color: 'var(--tang)' }} />
-              </div>
-              <h2 className="font-display text-xl mb-2" style={{ color: 'var(--ink)' }}>I&apos;m Hiring</h2>
-              <p className="text-sm mb-5 leading-relaxed" style={{ color: 'var(--g600)' }}>
-                Hospitals, clinics, and agencies. Post jobs and browse verified nurses directly.
-              </p>
-              <div className="space-y-2.5 mb-6">
-                {[
-                  'Direct access to verified nurses',
-                  'Verified, background-checked nurses',
-                  'Escrow payment protection',
-                  'Automatic onboarding PDF',
-                ].map(item => (
-                  <div key={item} className="flex items-center gap-2 text-sm" style={{ color: 'var(--g600)' }}>
-                    <CheckCircle className="w-4 h-4 shrink-0" style={{ color: 'var(--sage)' }} />
-                    {item}
-                  </div>
-                ))}
-              </div>
-              <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--tang)' }}>
-                Start hiring <ArrowRight className="w-4 h-4" />
-              </div>
-            </div>
-          </Link>
+        <div className="grid gap-5 sm:grid-cols-2">
+          {choices.map(choice => {
+            const isNurse = choice.tone === 'plum'
+            return (
+              <Link key={choice.href} href={choice.href} className="group rounded-lg border border-[var(--g100)] bg-[var(--surface-raised)] p-6 no-underline shadow-[var(--shadow-sm)] transition hover:-translate-y-px hover:shadow-[var(--shadow-md)]">
+                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-lg" style={{ background: isNurse ? 'var(--plum-50)' : 'var(--tang-50)', color: isNurse ? 'var(--plum)' : 'var(--tang-mid)' }}>
+                  <choice.icon className="h-6 w-6" />
+                </div>
+                <h2 className="text-xl font-bold text-[var(--ink)]">{choice.title}</h2>
+                <p className="mt-3 min-h-[78px] text-sm leading-7 text-[var(--g600)]">{choice.body}</p>
+                <div className="mt-5 space-y-2.5">
+                  {choice.items.map(item => (
+                    <div key={item} className="flex items-center gap-2 text-sm text-[var(--g600)]">
+                      <CheckCircle className="h-4 w-4 shrink-0 text-[var(--sage)]" />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold" style={{ color: isNurse ? 'var(--plum)' : 'var(--tang-mid)' }}>
+                  {choice.cta}
+                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+                </div>
+              </Link>
+            )
+          })}
         </div>
 
-        <p className="text-center text-sm mt-8" style={{ color: 'var(--g600)' }}>
+        <p className="mt-8 text-center text-sm text-[var(--g600)]">
           Already have an account?{' '}
-          <Link href="/auth/login" className="font-semibold no-underline" style={{ color: 'var(--plum)' }}>
+          <Link href="/auth/login" className="font-semibold text-[var(--plum)] no-underline">
             Sign in
           </Link>
         </p>

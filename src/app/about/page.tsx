@@ -1,10 +1,34 @@
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { createClient } from '@/lib/supabase/server'
-import { ArrowRight, Heart, Shield, Zap, Users, TrendingUp, Clock } from 'lucide-react'
+import { ArrowRight, Clock, FileSearch, ShieldCheck, Stethoscope, Users } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
+
+const principles = [
+  {
+    icon: Stethoscope,
+    title: 'Nurses keep leverage',
+    desc: 'Contract terms, credential status, and rate history stay visible to the clinician who owns the work.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Trust is operational',
+    desc: 'Licenses, background checks, and credential renewals belong in workflow, not scattered across inboxes.',
+  },
+  {
+    icon: FileSearch,
+    title: 'Evidence beats negotiation theatre',
+    desc: 'Every quote and signed contract can become a structured record with clear variance flags.',
+  },
+]
+
+const stats = [
+  { icon: Users, n: '2,400+', l: 'Verified nurses' },
+  { icon: ShieldCheck, n: '15%', l: 'Hospital fee' },
+  { icon: Clock, n: '48hr', l: 'Escrow release' },
+]
 
 export default async function AboutPage() {
   const supabase = await createClient()
@@ -19,170 +43,99 @@ export default async function AboutPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ background: 'var(--cream)' }}>
+    <div className="flex min-h-screen flex-col bg-[var(--cream)]">
       <Navbar userRole={userRole as 'nurse' | 'hospital' | 'admin' | null} userName={userName} />
 
-      {/* Hero — plum-deep background */}
-      <section style={{ background: 'var(--plum-deep)' }}>
-        <div className="max-w-[1280px] mx-auto w-full px-4 sm:px-8 lg:px-12 pt-20 pb-20">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-bold tracking-[0.8px] uppercase mb-7"
-              style={{ background: 'rgba(200,190,255,0.12)', color: 'var(--plum-100)' }}>
-              Our story
-            </div>
-            <h1 className="font-display text-[52px] md:text-[64px] leading-[1.02] mb-6 text-white">
-              Direct nurse hiring,<br />
-              <em className="italic" style={{ color: 'var(--tang)' }}>done right.</em>
-            </h1>
-            <p className="text-[18px] leading-[1.78] max-w-xl" style={{ color: 'var(--plum-100)' }}>
-              NurseSquare was built by people who got tired of watching travel nurses lose 30% of their earnings to agencies — and hospitals pay double for the privilege.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Mission cards — 3 distinct accent colors */}
-      <section className="py-16">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-8 lg:px-12">
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                icon: Heart,
-                title: 'Nurses first',
-                desc: 'We built for nurses. Free to join, free to apply, zero hidden fees. The rate you see is the rate you earn.',
-                bg: 'var(--plum-50)',
-                iconColor: 'var(--plum)',
-                accent: 'var(--plum)',
-              },
-              {
-                icon: Shield,
-                title: 'Verified & trusted',
-                desc: 'Every nurse is Nursys license-checked and Checkr background-cleared. Hospitals know exactly who they\'re hiring.',
-                bg: 'var(--sage-50)',
-                iconColor: 'var(--sage)',
-                accent: 'var(--sage)',
-              },
-              {
-                icon: Zap,
-                title: 'Direct connections',
-                desc: 'No recruiter middle layer. Nurses and hospitals talk directly. Placements close in days, not weeks.',
-                bg: 'var(--tang-50)',
-                iconColor: 'var(--tang)',
-                accent: 'var(--tang)',
-              },
-            ].map(item => (
-              <div key={item.title} className="rounded-2xl border p-7"
-                style={{ background: 'white', borderColor: 'var(--g100)' }}>
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
-                  style={{ background: item.bg }}>
-                  <item.icon className="w-6 h-6" style={{ color: item.iconColor }} />
-                </div>
-                <h3 className="font-display text-xl mb-2" style={{ color: 'var(--ink)' }}>{item.title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: 'var(--g600)' }}>{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Story — cream-mid band with left accent bar */}
-      <section className="py-20 border-y" style={{ background: 'var(--cream-mid)', borderColor: 'var(--g100)' }}>
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-8 lg:px-12">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+      <main className="flex-1">
+        <section className="surface-grid border-b border-[var(--g100)]">
+          <div className="container-shell grid gap-10 py-14 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:py-18">
             <div>
-              <h2 className="font-display text-[38px] mb-6" style={{ color: 'var(--ink)' }}>Why we built this</h2>
-              <div className="space-y-5 text-[16px] leading-[1.8]" style={{ color: 'var(--g600)' }}>
-                <p>
-                  The travel nursing industry runs on a broken model. Agencies sit between nurses and hospitals, charging facilities 25–40% markups while giving nurses a fraction of what they&apos;re worth.
-                </p>
-                <p>
-                  NurseSquare removes the middleman entirely. Hospitals post their roles, nurses apply directly, and our platform handles licensing verification, background checks, and escrow payments automatically.
-                </p>
-                <p>
-                  The result: nurses earn more, hospitals spend less, and placements happen in days. That&apos;s the whole idea.
-                </p>
+              <div className="mb-5 inline-flex rounded-md bg-[var(--plum-50)] px-2.5 py-1 text-xs font-bold uppercase text-[var(--plum)]">
+                Our story
               </div>
+              <h1 className="max-w-3xl text-[40px] font-bold leading-[1.06] text-[var(--ink)] md:text-[58px]">
+                We built NurseSquare for the work after the job post.
+              </h1>
             </div>
-
-            {/* Pull-quote card */}
-            <div className="rounded-2xl p-8" style={{ background: 'var(--plum-deep)' }}>
-              <p className="font-display text-[26px] leading-snug text-white mb-6">
-                &ldquo;The agency was taking $18 an hour off my rate. NurseSquare put it back in my pocket.&rdquo;
+            <div className="rounded-lg border border-[var(--g100)] bg-[var(--surface)] p-6 shadow-[var(--shadow-sm)]">
+              <p className="text-[16px] leading-8 text-[var(--g600)]">
+                Direct hiring is only useful when the operational details are clear. NurseSquare combines job access, contract evidence, credential tracking, and escrow workflows so nurses and hospitals can work without the agency layer.
               </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold"
-                  style={{ background: 'rgba(200,190,255,0.15)', color: 'var(--plum-100)' }}>
-                  KM
-                </div>
-                <div>
-                  <div className="text-sm font-semibold text-white">Kayla M.</div>
-                  <div className="text-xs" style={{ color: 'var(--plum-100)' }}>ICU Travel Nurse · Seattle, WA</div>
-                </div>
-              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Stats — tang accent */}
-      <section className="py-16" style={{ background: 'var(--tang)' }}>
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-8 lg:px-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
-            {[
-              { icon: Users, n: '2,400+', l: 'Verified nurses' },
-              { icon: TrendingUp, n: '38', l: 'States covered' },
-              { icon: Shield, n: '15%', l: 'Hospital fee (vs 25–40%)' },
-              { icon: Clock, n: '48hr', l: 'Average placement' },
-            ].map(stat => (
-              <div key={stat.l} className="text-center">
-                <stat.icon className="w-6 h-6 mx-auto mb-2 opacity-70 text-white" />
-                <div className="font-display text-[42px] mb-1 text-white">{stat.n}</div>
-                <div className="text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>{stat.l}</div>
+        <section className="border-b border-[var(--g100)] bg-[var(--surface)]">
+          <div className="container-shell grid gap-5 py-12 md:grid-cols-3">
+            {principles.map(item => (
+              <article key={item.title} className="rounded-lg border border-[var(--g100)] bg-[var(--surface-raised)] p-6 shadow-[var(--shadow-sm)]">
+                <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--plum-50)] text-[var(--plum)]">
+                  <item.icon className="h-5 w-5" />
+                </div>
+                <h2 className="text-lg font-bold text-[var(--ink)]">{item.title}</h2>
+                <p className="mt-3 text-sm leading-7 text-[var(--g600)]">{item.desc}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="bg-[var(--cream)] py-14">
+          <div className="container-shell grid gap-8 lg:grid-cols-[1fr_420px] lg:items-center">
+            <div>
+              <p className="text-xs font-bold uppercase text-[var(--tang-mid)]">Why it matters</p>
+              <h2 className="mt-2 text-[32px] font-bold leading-tight text-[var(--ink)] md:text-[42px]">
+                The old staffing model hides too much at the moment decisions get expensive.
+              </h2>
+              <div className="mt-5 space-y-4 text-sm leading-7 text-[var(--g600)]">
+                <p>
+                  Travel nurses often compare recruiter promises, partial PDFs, contract changes, credential deadlines, and assignment-location rules by hand. Hospitals carry a different version of the same problem: unclear candidate readiness and avoidable placement drag.
+                </p>
+                <p>
+                  NurseSquare moves those details into a structured workspace. The result is less ambiguity, faster direct placement, and better proof when a contract no longer matches the offer.
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-[var(--g100)] bg-[var(--plum-deep)] p-6 text-white shadow-[var(--shadow-md)]">
+              <p className="text-xs font-bold uppercase text-[var(--plum-100)]">Operating principle</p>
+              <p className="mt-4 text-2xl font-bold leading-snug">
+                If a rate, credential, date, or tax-home assumption can change the decision, it should be visible before anyone signs.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-y border-[var(--g100)] bg-[var(--surface)]">
+          <div className="container-shell grid gap-4 py-10 md:grid-cols-3">
+            {stats.map(stat => (
+              <div key={stat.l} className="rounded-lg border border-[var(--g100)] bg-[var(--surface-raised)] p-5 shadow-[var(--shadow-sm)]">
+                <stat.icon className="h-5 w-5 text-[var(--plum)]" />
+                <div className="mt-4 text-3xl font-bold text-[var(--ink)]">{stat.n}</div>
+                <div className="mt-1 text-sm text-[var(--g600)]">{stat.l}</div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* How it works — alternating colored steps */}
-      <section className="py-20">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-8 lg:px-12">
-          <h2 className="font-display text-[38px] mb-12 text-center" style={{ color: 'var(--ink)' }}>
-            How NurseSquare works
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { n: '01', title: 'Hospitals post jobs', desc: 'Facilities post open positions in minutes — specialty, dates, pay rate. Live immediately.', bg: 'var(--plum-50)', num: 'var(--plum)' },
-              { n: '02', title: 'Nurses apply directly', desc: 'Verified nurses browse and apply. No recruiter gatekeeper. Both sides can initiate contact.', bg: 'var(--sage-50)', num: 'var(--sage)' },
-              { n: '03', title: 'Escrow handles pay', desc: 'Funds held securely in Stripe. Released 48hrs after placement starts. Zero surprises.', bg: 'var(--tang-50)', num: 'var(--tang)' },
-            ].map(step => (
-              <div key={step.n} className="rounded-2xl p-7" style={{ background: step.bg }}>
-                <div className="font-display text-[56px] leading-none mb-4" style={{ color: step.num, opacity: 0.3 }}>{step.n}</div>
-                <h3 className="font-display text-xl mb-2" style={{ color: 'var(--ink)' }}>{step.title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: 'var(--g600)' }}>{step.desc}</p>
-              </div>
-            ))}
+        <section className="bg-[var(--cream)] py-14">
+          <div className="container-shell flex flex-col items-start justify-between gap-6 rounded-lg border border-[var(--g100)] bg-[var(--surface)] p-6 shadow-[var(--shadow-sm)] md:flex-row md:items-center">
+            <div>
+              <h2 className="text-2xl font-bold text-[var(--ink)]">Use NurseSquare on the next contract.</h2>
+              <p className="mt-2 text-sm leading-7 text-[var(--g600)]">
+                Start as a nurse or open a hiring workspace for your facility.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link href="/auth/register/nurse" className="focus-ring inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--plum)] px-5 py-3 text-sm font-semibold text-white no-underline">
+                Join as a nurse <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link href="/auth/register/hospital" className="focus-ring inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--g200)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--g800)] no-underline">
+                Hire nurses
+              </Link>
+            </div>
           </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-16 border-t" style={{ borderColor: 'var(--g100)' }}>
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-8 lg:px-12">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link href="/auth/register/nurse"
-              className="inline-flex items-center gap-2 font-bold text-[15px] px-7 py-3.5 rounded-[14px] text-white transition-all hover:-translate-y-px no-underline"
-              style={{ background: 'var(--plum)', boxShadow: '0 8px 24px rgba(45,27,105,0.28)' }}>
-              Join as a nurse <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link href="/auth/register/hospital"
-              className="inline-flex items-center gap-2 font-bold text-[15px] px-7 py-3.5 rounded-[14px] text-white transition-all hover:-translate-y-px no-underline"
-              style={{ background: 'var(--tang)', boxShadow: '0 8px 24px rgba(255,121,64,0.32)' }}>
-              I&apos;m hiring
-            </Link>
-          </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
       <Footer />
     </div>

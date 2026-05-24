@@ -12,19 +12,18 @@ interface PageHeroProps {
 export default function PageHero({ eyebrow, title, titleAccent, subtitle, actions, className }: PageHeroProps) {
   return (
     <header className={cn('mb-8 lg:mb-10', className)}>
-      <div className="flex items-start justify-between gap-6 flex-wrap">
+      <div className="flex flex-wrap items-start justify-between gap-5 border-b border-[var(--g100)] pb-6">
         <div className="max-w-2xl">
           {eyebrow && (
             <div
-              className="animate-fade-up inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-bold tracking-[0.8px] uppercase mb-5"
-              style={{ background: 'var(--plum)', color: 'var(--plum-100)' }}
+              className="animate-fade-up mb-4 inline-flex items-center gap-2 rounded-md px-2.5 py-1 text-[10px] font-bold uppercase"
+              style={{ background: 'var(--plum-50)', color: 'var(--plum)' }}
             >
-              <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--tang)' }} />
               {eyebrow}
             </div>
           )}
           <h1
-            className="animate-fade-up delay-100 font-display leading-[1.02] tracking-[-0.5px] text-[40px] md:text-[52px]"
+            className="animate-fade-up delay-100 leading-[1.08] text-[32px] font-bold md:text-[42px]"
             style={{ color: 'var(--ink)' }}
           >
             {title}
@@ -34,7 +33,7 @@ export default function PageHero({ eyebrow, title, titleAccent, subtitle, action
           </h1>
           {subtitle && (
             <p
-              className="animate-fade-up delay-200 text-[15px] md:text-[17px] leading-[1.7] mt-4 max-w-[640px]"
+              className="animate-fade-up delay-200 mt-3 max-w-[680px] text-[15px] leading-7"
               style={{ color: 'var(--g600)' }}
             >
               {subtitle}

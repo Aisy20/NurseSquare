@@ -83,33 +83,36 @@ export default function HospitalProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-screen bg-gray-50">
+      <div className="role-bg-hospital flex min-h-screen flex-col">
         <Navbar userRole="hospital" userName={null} />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
+        <div className="flex flex-1 items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--tang)] border-t-transparent" />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="role-bg-hospital flex min-h-screen flex-col">
       <Navbar userRole="hospital" userName={form.org_name} />
 
-      <main className="flex-1 max-w-2xl mx-auto px-4 sm:px-6 py-8 w-full">
+      <main className="container-shell w-full max-w-2xl flex-1 py-8 lg:py-10">
         <button onClick={() => router.push('/hospital/dashboard')}
-          className="inline-flex items-center gap-1.5 text-sm font-medium mb-6 transition-opacity hover:opacity-70"
+          className="focus-ring mb-6 inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-medium transition-opacity hover:opacity-70"
           style={{ color: 'var(--tang-mid)' }}>
           ← Dashboard
         </button>
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Organization Profile</h1>
-          <p className="text-gray-500 mt-1">Keep your information up to date</p>
+        <div className="mb-8 rounded-lg border border-[var(--g100)] bg-[var(--surface)] p-6 shadow-[var(--shadow-sm)]">
+          <div className="mb-3 inline-flex rounded-md bg-[var(--tang-50)] px-2.5 py-1 text-[10px] font-bold uppercase text-[var(--tang-mid)]">
+            Hiring workspace
+          </div>
+          <h1 className="text-[32px] font-bold leading-tight text-[var(--ink)]">Organization profile</h1>
+          <p className="mt-2 text-sm leading-7 text-[var(--g600)]">Keep contact, location, and facility details current.</p>
         </div>
 
-        {error && <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3">{error}</div>}
+        {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
         {success && (
-          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg p-3 flex items-center gap-2">
+          <div className="mb-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">
             <CheckCircle className="w-4 h-4" /> {success}
           </div>
         )}

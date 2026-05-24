@@ -97,13 +97,13 @@ export default function HospitalRegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ background: 'var(--cream)' }}>
+    <div className="role-bg-hospital flex min-h-screen">
       {/* Brand sidebar */}
-      <div className="hidden lg:flex lg:w-[380px] flex-col justify-between p-12"
-        style={{ background: '#FFA574' }}>
+      <div className="hidden flex-col justify-between p-12 lg:flex lg:w-[380px]"
+        style={{ background: 'var(--hospital-bg-band)' }}>
         <Logo inv variant="hospital" />
         <div>
-          <p className="font-display text-[28px] leading-snug mb-6" style={{ color: 'var(--plum-deep)' }}>
+          <p className="mb-6 text-[30px] font-bold leading-snug" style={{ color: 'var(--plum-deep)' }}>
             Hire direct.<br />No markup.
           </p>
           <div className="space-y-3">
@@ -119,13 +119,13 @@ export default function HospitalRegisterPage() {
       </div>
 
       {/* Form panel */}
-      <div className="flex-1 flex items-start justify-center px-4 py-12 overflow-y-auto">
+      <div className="flex flex-1 items-start justify-center overflow-y-auto px-4 py-12">
         <div className="w-full max-w-lg">
           <div className="lg:hidden mb-8 flex justify-center">
             <Logo variant="hospital" />
           </div>
 
-          <h1 className="font-display text-[28px] mb-1" style={{ color: 'var(--ink)' }}>Create your employer account</h1>
+          <h1 className="mb-1 text-[30px] font-bold" style={{ color: 'var(--ink)' }}>Create your employer account</h1>
           <p className="text-sm mb-7" style={{ color: 'var(--g600)' }}>Start hiring verified travel nurses directly.</p>
 
           {/* Step indicator */}
@@ -133,7 +133,7 @@ export default function HospitalRegisterPage() {
             {[{ n: 1, label: 'Account' }, { n: 2, label: 'Organization' }].map((s, i) => (
               <div key={s.n} className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors"
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold transition-colors"
                     style={{
                       background: step >= s.n ? 'var(--tang)' : 'var(--g100)',
                       color: step >= s.n ? 'white' : 'var(--g400)',
@@ -149,9 +149,9 @@ export default function HospitalRegisterPage() {
             ))}
           </div>
 
-          <div className="rounded-2xl border p-7" style={{ background: 'white', borderColor: 'var(--g100)' }}>
+          <div className="rounded-lg border p-7 shadow-[var(--shadow-sm)]" style={{ background: 'var(--surface)', borderColor: 'var(--g100)' }}>
             {error && (
-              <div className="mb-5 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm p-3">
+              <div className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
                 {error}
               </div>
             )}

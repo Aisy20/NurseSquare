@@ -8,10 +8,8 @@ import { TrendingDown, AlertTriangle } from 'lucide-react'
 export default function ExampleDiff() {
   return (
     <div
-      className="relative rounded-[28px] p-7 lg:p-9 overflow-hidden"
+      className="relative overflow-hidden rounded-lg border border-[var(--g100)] bg-[var(--surface-raised)] p-5 shadow-[var(--shadow-md)] lg:p-7"
       style={{
-        background: 'white',
-        boxShadow: '0 32px 64px rgba(28,16,68,0.10), 0 0 0 1px var(--g100)',
       }}
     >
       <div className="flex items-center justify-between mb-7 flex-wrap gap-3">
@@ -24,7 +22,7 @@ export default function ExampleDiff() {
           </div>
         </div>
         <span
-          className="inline-flex items-center gap-1.5 text-[11px] font-bold tracking-wider uppercase px-3 py-1.5 rounded-lg"
+          className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-bold uppercase"
           style={{ background: 'var(--tang)', color: 'white' }}
         >
           <AlertTriangle className="w-3.5 h-3.5" />
@@ -57,7 +55,7 @@ export default function ExampleDiff() {
       </table>
 
       <div
-        className="mt-7 rounded-2xl p-5 flex items-start gap-3"
+        className="mt-7 flex items-start gap-3 rounded-lg p-5"
         style={{ background: 'var(--tang-50)', border: '1px solid var(--tang-100)' }}
       >
         <TrendingDown className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: 'var(--tang-mid)' }} />
@@ -74,7 +72,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone: 'tan
     ? { bg: 'var(--tang)', color: 'white', subColor: 'rgba(255,255,255,0.8)' }
     : { bg: 'var(--cream-mid)', color: 'var(--ink)', subColor: 'var(--g600)' }
   return (
-    <div className="rounded-2xl p-4" style={{ background: styles.bg }}>
+    <div className="rounded-lg p-4" style={{ background: styles.bg }}>
       <div className="text-[10px] font-bold tracking-[1.2px] uppercase" style={{ color: styles.subColor }}>{label}</div>
       <div className="text-3xl font-bold mt-1" style={{ color: styles.color, fontFamily: 'var(--font-sora)' }}>{value}</div>
     </div>
@@ -89,7 +87,7 @@ function Row({ label, quoted, signed, delta, worse }: { label: string; quoted: s
       <td className="py-3 text-sm text-right font-mono" style={{ color: worse ? 'var(--tang-mid)' : 'var(--ink)' }}>{signed}</td>
       <td className="py-3 text-right">
         <span
-          className="text-[10px] font-bold tracking-[1px] uppercase px-2 py-0.5 rounded-md"
+          className="rounded-md px-2 py-0.5 text-[10px] font-bold uppercase"
           style={{
             background: worse ? 'var(--tang-50)' : 'var(--g100)',
             color: worse ? 'var(--tang-mid)' : 'var(--g400)',

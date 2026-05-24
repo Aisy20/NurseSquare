@@ -5,7 +5,7 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
-import { Mail, MessageSquare, Building2, Stethoscope } from 'lucide-react'
+import { Building2, Mail, MessageSquare, Stethoscope } from 'lucide-react'
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: '', email: '', role: 'nurse', message: '' })
@@ -21,125 +21,111 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ background: 'var(--cream)' }}>
+    <div className="flex min-h-screen flex-col bg-[var(--cream)]">
       <Navbar />
 
-      <section className="max-w-[1280px] mx-auto w-full px-4 sm:px-8 lg:px-12 pt-20 pb-24">
-        <div className="grid lg:grid-cols-[1fr_1.2fr] gap-20 items-start">
-          {/* Left */}
-          <div>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-bold tracking-[0.8px] uppercase mb-7"
-              style={{ background: 'var(--plum-50)', color: 'var(--plum)' }}>
-              Get in touch
-            </div>
-            <h1 className="font-display text-[48px] leading-tight mb-5" style={{ color: 'var(--ink)' }}>
-              We&apos;d love to<br />
-              <em className="italic" style={{ color: 'var(--plum)' }}>hear from you.</em>
-            </h1>
-            <p className="text-[16px] leading-[1.78] mb-10" style={{ color: 'var(--g600)' }}>
-              Whether you&apos;re a nurse with questions or a hospital ready to post your first job — our team responds within one business day.
-            </p>
-
-            <div className="space-y-6">
-              {[
-                { icon: Mail, title: 'General inquiries', value: 'hello@nursesquare.com' },
-                { icon: Stethoscope, title: 'Nurse support', value: 'nurses@nursesquare.com' },
-                { icon: Building2, title: 'Hospital partnerships', value: 'hospitals@nursesquare.com' },
-              ].map(item => (
-                <div key={item.title} className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-[14px] flex items-center justify-center shrink-0"
-                    style={{ background: 'var(--plum-50)' }}>
-                    <item.icon className="w-5 h-5" style={{ color: 'var(--plum)' }} />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-sm mb-0.5" style={{ color: 'var(--ink)' }}>{item.title}</div>
-                    <a href={`mailto:${item.value}`} className="text-sm no-underline" style={{ color: 'var(--plum)' }}>
-                      {item.value}
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Form */}
-          <div className="rounded-2xl border p-8" style={{ background: 'white', borderColor: 'var(--g100)' }}>
-            {sent ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-16 h-16 rounded-full flex items-center justify-center mb-5"
-                  style={{ background: 'var(--sage-50)' }}>
-                  <MessageSquare className="w-8 h-8" style={{ color: 'var(--sage)' }} />
-                </div>
-                <h2 className="font-display text-2xl mb-2" style={{ color: 'var(--ink)' }}>Message sent!</h2>
-                <p className="text-sm" style={{ color: 'var(--g600)' }}>
-                  We&apos;ll get back to you within one business day.
-                </p>
+      <main className="flex-1">
+        <section className="surface-grid border-b border-[var(--g100)]">
+          <div className="container-shell grid gap-10 py-14 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+            <div>
+              <div className="mb-5 inline-flex rounded-md bg-[var(--plum-50)] px-2.5 py-1 text-xs font-bold uppercase text-[var(--plum)]">
+                Contact
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <h2 className="font-display text-2xl mb-1" style={{ color: 'var(--ink)' }}>Send a message</h2>
-                <p className="text-sm mb-5" style={{ color: 'var(--g600)' }}>We read every message.</p>
+              <h1 className="max-w-xl text-[40px] font-bold leading-[1.06] text-[var(--ink)] md:text-[56px]">
+                Talk to the team building the workspace.
+              </h1>
+              <p className="mt-5 max-w-xl text-[16px] leading-8 text-[var(--g600)]">
+                Questions about nurse onboarding, hospital hiring, credentials, or contract review usually get a response within one business day.
+              </p>
 
-                {/* Role toggle */}
-                <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--g800)' }}>I am a…</label>
-                  <div className="flex gap-2">
-                    {[
-                      { value: 'nurse', label: 'Nurse' },
-                      { value: 'hospital', label: 'Hospital / Facility' },
-                      { value: 'other', label: 'Other' },
-                    ].map(opt => (
-                      <button key={opt.value} type="button"
-                        onClick={() => update('role', opt.value)}
-                        className="flex-1 py-2 rounded-xl text-sm font-medium border transition-all"
-                        style={{
-                          background: form.role === opt.value ? 'var(--plum)' : 'white',
-                          color: form.role === opt.value ? 'white' : 'var(--g600)',
-                          borderColor: form.role === opt.value ? 'var(--plum)' : 'var(--g200)',
-                        }}>
-                        {opt.label}
-                      </button>
-                    ))}
+              <div className="mt-9 grid gap-4">
+                {[
+                  { icon: Mail, title: 'General inquiries', value: 'hello@nursesquare.com' },
+                  { icon: Stethoscope, title: 'Nurse support', value: 'nurses@nursesquare.com' },
+                  { icon: Building2, title: 'Hospital partnerships', value: 'hospitals@nursesquare.com' },
+                ].map(item => (
+                  <div key={item.title} className="flex items-start gap-4 rounded-lg border border-[var(--g100)] bg-[var(--surface)] p-4 shadow-[var(--shadow-sm)]">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--plum-50)] text-[var(--plum)]">
+                      <item.icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-[var(--ink)]">{item.title}</div>
+                      <a href={`mailto:${item.value}`} className="text-sm text-[var(--plum)] no-underline">
+                        {item.value}
+                      </a>
+                    </div>
                   </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-[var(--g100)] bg-[var(--surface-raised)] p-6 shadow-[var(--shadow-md)]">
+              {sent ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-lg bg-[var(--sage-50)] text-[var(--sage)]">
+                    <MessageSquare className="h-7 w-7" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-[var(--ink)]">Message sent</h2>
+                  <p className="mt-2 text-sm text-[var(--g600)]">
+                    We&apos;ll get back to you within one business day.
+                  </p>
                 </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <div>
+                    <h2 className="text-2xl font-bold text-[var(--ink)]">Send a message</h2>
+                    <p className="mt-1 text-sm text-[var(--g600)]">We read every message.</p>
+                  </div>
 
-                <Input
-                  label="Your name"
-                  value={form.name}
-                  onChange={e => update('name', e.target.value)}
-                  required
-                  placeholder="Jane Smith"
-                />
-                <Input
-                  label="Email address"
-                  type="email"
-                  value={form.email}
-                  onChange={e => update('email', e.target.value)}
-                  required
-                  placeholder="you@example.com"
-                />
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-[var(--g800)]">I am a...</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { value: 'nurse', label: 'Nurse' },
+                        { value: 'hospital', label: 'Facility' },
+                        { value: 'other', label: 'Other' },
+                      ].map(opt => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => update('role', opt.value)}
+                          className="focus-ring rounded-lg border px-3 py-2 text-sm font-medium transition-all"
+                          style={{
+                            background: form.role === opt.value ? 'var(--plum)' : 'var(--surface)',
+                            color: form.role === opt.value ? 'white' : 'var(--g600)',
+                            borderColor: form.role === opt.value ? 'var(--plum)' : 'var(--g200)',
+                          }}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-                <div className="space-y-1">
-                  <label className="block text-sm font-medium" style={{ color: 'var(--g800)' }}>Message</label>
-                  <textarea
-                    value={form.message}
-                    onChange={e => update('message', e.target.value)}
-                    required
-                    rows={5}
-                    placeholder="Tell us how we can help..."
-                    className="block w-full rounded-xl border px-3 py-2.5 text-sm resize-y focus:outline-none focus:ring-2"
-                    style={{ borderColor: 'var(--g200)', color: 'var(--ink)' }}
-                  />
-                </div>
+                  <Input label="Your name" value={form.name} onChange={e => update('name', e.target.value)} required placeholder="Jane Smith" />
+                  <Input label="Email address" type="email" value={form.email} onChange={e => update('email', e.target.value)} required placeholder="you@example.com" />
 
-                <Button type="submit" className="w-full" size="lg">
-                  Send message
-                </Button>
-              </form>
-            )}
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-[var(--g800)]">Message</label>
+                    <textarea
+                      value={form.message}
+                      onChange={e => update('message', e.target.value)}
+                      required
+                      rows={5}
+                      placeholder="Tell us how we can help..."
+                      className="focus-ring block w-full resize-y rounded-lg border border-[var(--g200)] bg-[var(--surface)] px-3 py-2.5 text-sm text-[var(--ink)] shadow-[var(--shadow-sm)] placeholder:text-[var(--g400)]"
+                    />
+                  </div>
+
+                  <Button type="submit" className="w-full" size="lg">
+                    Send message
+                  </Button>
+                </form>
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
       <Footer />
     </div>

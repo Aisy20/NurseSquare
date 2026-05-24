@@ -5,27 +5,43 @@
   --plum-mid: #3D2A85;
   --plum-deep: #1C1044;
   --plum-light: #5B45A8;
-  --plum-50: #EEE9FF;
-  --plum-100: #C8BEFF;
-  --tang: #FF7940;
-  --tang-50: #FFF0EA;
-  --tang-100: #FFD0BA;
-  --tang-mid: #C04E20;
-  --tang-deep: #6B2E16;
-  --gold: #F5C842;
-  --gold-50: #FFFBEA;
-  --sage: #3AA876;
-  --sage-50: #E6F7EE;
-  --ink: #0A0714;
-  --cream: #FAFAF7;
+  --plum-50: #F2EEFF;
+  --plum-100: #DCD3FF;
+  --tang: #E95F2F;
+  --tang-50: #FFF1EB;
+  --tang-100: #FFD6C4;
+  --tang-mid: #B5481F;
+  --tang-deep: #723019;
+  --gold: #DDAA2D;
+  --gold-50: #FFF8DE;
+  --sage: #248566;
+  --sage-50: #E8F6EF;
+  --teal: #176A75;
+  --teal-50: #E7F4F5;
+  --ink: #111018;
+  --cream: #FBFAF6;
   --cream-mid: #F3F0E8;
-  --cream-deep: #E8E3D8;
+  --cream-deep: #E6E0D4;
   --white: #FFFFFF;
-  --g100: #EAE8F0;
-  --g200: #D4D0E0;
-  --g400: #9E99B2;
-  --g600: #6B6580;
-  --g800: #3D3852;
+  --g50: #F7F6F2;
+  --g100: #E8E4DC;
+  --g200: #D8D1C4;
+  --g400: #9D9488;
+  --g600: #665F55;
+  --g800: #302D2A;
+  --surface: #FFFFFF;
+  --surface-raised: #FFFEFB;
+  --ring: rgba(45, 27, 105, 0.18);
+  --shadow-sm: 0 1px 2px rgba(17, 16, 24, 0.05);
+  --shadow-md: 0 14px 34px rgba(17, 16, 24, 0.08);
+  --nurse-bg: #F7F3FF;
+  --nurse-bg-band: #EFE9FF;
+  --nurse-accent: #2D1B69;
+  --nurse-support: #176A75;
+  --hospital-bg: #F0F9F5;
+  --hospital-bg-band: #E4F4EC;
+  --hospital-accent: #185D52;
+  --hospital-warm: #E95F2F;
 }
 
 body {
@@ -33,10 +49,65 @@ body {
   background: var(--cream);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
 }
 
 .font-display {
   font-family: var(--font-serif), Georgia, serif;
+}
+
+.role-bg-nurse {
+  background:
+    linear-gradient(180deg, var(--nurse-bg) 0%, var(--cream) 42%, var(--cream) 100%);
+}
+
+.role-bg-hospital {
+  background:
+    linear-gradient(180deg, var(--hospital-bg) 0%, var(--cream) 42%, var(--cream) 100%);
+}
+
+.role-panel-nurse {
+  background: color-mix(in srgb, var(--nurse-bg-band) 66%, white);
+  border-color: color-mix(in srgb, var(--nurse-accent) 16%, white);
+}
+
+.role-panel-hospital {
+  background: color-mix(in srgb, var(--hospital-bg-band) 72%, white);
+  border-color: color-mix(in srgb, var(--hospital-accent) 18%, white);
+}
+
+.container-shell {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-shell {
+    padding-inline: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-shell {
+    padding-inline: 3rem;
+  }
+}
+
+.focus-ring {
+  outline: none;
+}
+
+.focus-ring:focus-visible {
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+.surface-grid {
+  background-image:
+    linear-gradient(rgba(17, 16, 24, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17, 16, 24, 0.045) 1px, transparent 1px);
+  background-size: 44px 44px;
 }
 
 /* ── Entrance animations ── */

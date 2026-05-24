@@ -54,12 +54,12 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ background: 'var(--cream)' }}>
-      <div className="hidden lg:flex lg:w-[420px] flex-col justify-between p-12"
+    <div className="flex min-h-screen bg-[var(--cream)]">
+      <div className="hidden flex-col justify-between p-12 lg:flex lg:w-[420px]"
         style={{ background: 'var(--plum-deep)' }}>
         <Logo inv />
         <div>
-          <p className="font-display text-[32px] leading-snug text-white mb-4">
+          <p className="mb-4 text-[32px] font-bold leading-snug text-white">
             Set a new password.
           </p>
           <p className="text-sm" style={{ color: 'var(--plum-100)' }}>
@@ -69,19 +69,19 @@ export default function ResetPasswordPage() {
         <p className="text-xs" style={{ color: 'var(--g400)' }}>© {new Date().getFullYear()} NurseSquare</p>
       </div>
 
-      <div className="flex-1 flex items-center justify-center px-4 py-12">
+      <div className="flex flex-1 items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <div className="lg:hidden mb-8 flex justify-center">
             <Logo />
           </div>
 
-          <h1 className="font-display text-[30px] mb-1" style={{ color: 'var(--ink)' }}>New password</h1>
+          <h1 className="mb-1 text-[30px] font-bold" style={{ color: 'var(--ink)' }}>New password</h1>
           <p className="text-sm mb-8" style={{ color: 'var(--g600)' }}>Pick something you&apos;ll remember.</p>
 
-          <div className="rounded-2xl border p-7" style={{ background: 'white', borderColor: 'var(--g100)' }}>
+          <div className="rounded-lg border p-7 shadow-[var(--shadow-sm)]" style={{ background: 'var(--surface)', borderColor: 'var(--g100)' }}>
             {done ? (
               <div className="text-center py-4">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg"
                   style={{ background: 'var(--sage-50)' }}>
                   <CheckCircle className="w-6 h-6" style={{ color: 'var(--sage)' }} />
                 </div>
@@ -101,7 +101,7 @@ export default function ResetPasswordPage() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
                 {error && (
-                  <div className="rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm p-3">
+                  <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
                     {error}
                   </div>
                 )}

@@ -122,35 +122,38 @@ export default function NurseProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-screen bg-gray-50">
+      <div className="role-bg-nurse flex min-h-screen flex-col">
         <Navbar userRole="nurse" userName={null} />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
+        <div className="flex flex-1 items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--plum)] border-t-transparent" />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="role-bg-nurse flex min-h-screen flex-col">
       <Navbar userRole="nurse" userName={form.full_name} />
 
-      <main className="flex-1 max-w-3xl mx-auto px-4 sm:px-6 py-8 w-full">
+      <main className="container-shell w-full max-w-3xl flex-1 py-8 lg:py-10">
         <button onClick={() => router.push('/nurse/dashboard')}
-          className="inline-flex items-center gap-1.5 text-sm font-medium mb-6 transition-opacity hover:opacity-70"
+          className="focus-ring mb-6 inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-medium transition-opacity hover:opacity-70"
           style={{ color: 'var(--plum)' }}>
           ← Dashboard
         </button>
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
-          <p className="text-gray-500 mt-1">Keep your profile up to date to attract the best opportunities</p>
+        <div className="mb-8 rounded-lg border border-[var(--g100)] bg-[var(--surface)] p-6 shadow-[var(--shadow-sm)]">
+          <div className="mb-3 inline-flex rounded-md bg-[var(--plum-50)] px-2.5 py-1 text-[10px] font-bold uppercase text-[var(--plum)]">
+            Nurse profile
+          </div>
+          <h1 className="text-[32px] font-bold leading-tight text-[var(--ink)]">My profile</h1>
+          <p className="mt-2 text-sm leading-7 text-[var(--g600)]">Keep your clinical profile, license details, and availability current.</p>
         </div>
 
         {error && (
-          <div className="mb-5 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3">{error}</div>
+          <div className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
         )}
         {success && (
-          <div className="mb-5 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg p-3 flex items-center gap-2">
+          <div className="mb-5 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">
             <CheckCircle className="w-4 h-4" /> {success}
           </div>
         )}
@@ -158,7 +161,7 @@ export default function NurseProfilePage() {
         <form onSubmit={handleSave} className="space-y-6">
           {/* Basic Info */}
           <Card>
-            <h2 className="font-semibold text-gray-900 mb-5">Basic Information</h2>
+            <h2 className="mb-5 font-semibold text-[var(--ink)]">Basic information</h2>
             <div className="space-y-4">
               <Input label="Full name" value={form.full_name} onChange={e => update('full_name', e.target.value)} required />
               <Select
@@ -184,7 +187,7 @@ export default function NurseProfilePage() {
           {/* License */}
           <Card>
             <div className="flex items-center justify-between mb-5">
-              <h2 className="font-semibold text-gray-900">Nursing License</h2>
+              <h2 className="font-semibold text-[var(--ink)]">Nursing license</h2>
               {profile?.license_verified && <Badge variant="success">Verified via Nursys</Badge>}
             </div>
             <div className="space-y-4">
@@ -219,7 +222,7 @@ export default function NurseProfilePage() {
 
           {/* Professional Details */}
           <Card>
-            <h2 className="font-semibold text-gray-900 mb-5">Professional Details</h2>
+            <h2 className="mb-5 font-semibold text-[var(--ink)]">Professional details</h2>
             <div className="space-y-4">
               <Select
                 label="Primary specialty"
@@ -255,12 +258,12 @@ export default function NurseProfilePage() {
           {/* Background Check */}
           <div id="background-check"><Card>
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
-                <Shield className="w-6 h-6 text-blue-600" />
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[var(--plum-50)] text-[var(--plum)]">
+                <Shield className="w-6 h-6" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h2 className="font-semibold text-gray-900">Background Check</h2>
+                  <h2 className="font-semibold text-[var(--ink)]">Background check</h2>
                   <Badge variant={
                     profile?.background_check_status === 'passed' ? 'success' :
                     profile?.background_check_status === 'failed' ? 'danger' :
@@ -269,7 +272,7 @@ export default function NurseProfilePage() {
                     {profile?.background_check_status?.replace('_', ' ')}
                   </Badge>
                 </div>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="mb-4 text-sm leading-6 text-[var(--g600)]">
                   Required before applying for jobs. Powered by Checkr. Cost is $20–30 paid directly to Checkr.
                   Results typically available within 1–3 business days.
                 </p>
@@ -285,7 +288,7 @@ export default function NurseProfilePage() {
                   </Button>
                 )}
                 {profile?.background_check_status === 'in_progress' && (
-                  <p className="text-sm text-blue-600">Your background check is in progress. We&apos;ll notify you when it&apos;s complete.</p>
+                  <p className="text-sm text-[var(--plum)]">Your background check is in progress. We&apos;ll notify you when it&apos;s complete.</p>
                 )}
                 {profile?.background_check_status === 'pending' && (
                   <p className="text-sm text-yellow-700">Your report is complete but flagged for manual review. Our team will reach out within 1–2 business days.</p>

@@ -169,13 +169,13 @@ export default function NurseRegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ background: 'var(--cream)' }}>
+    <div className="role-bg-nurse flex min-h-screen">
       {/* Brand sidebar */}
-      <div className="hidden lg:flex lg:w-[360px] flex-col justify-between p-12"
+      <div className="hidden flex-col justify-between p-12 lg:flex lg:w-[360px]"
         style={{ background: 'var(--plum-deep)' }}>
         <Logo inv />
         <div>
-          <p className="font-display text-[26px] leading-snug text-white mb-3">
+          <p className="mb-3 text-[28px] font-bold leading-snug text-white">
             Your skills.<br />Your terms.
           </p>
           <p className="text-sm mb-6" style={{ color: 'var(--plum-100)' }}>
@@ -194,13 +194,13 @@ export default function NurseRegisterPage() {
       </div>
 
       {/* Form panel */}
-      <div className="flex-1 flex items-start justify-center px-4 py-12 overflow-y-auto">
+      <div className="flex flex-1 items-start justify-center overflow-y-auto px-4 py-12">
         <div className="w-full max-w-lg">
           <div className="lg:hidden mb-8 flex justify-center">
             <Logo />
           </div>
 
-          <h1 className="font-display text-[26px] mb-1" style={{ color: 'var(--ink)' }}>Create your nurse profile</h1>
+          <h1 className="mb-1 text-[30px] font-bold" style={{ color: 'var(--ink)' }}>Create your nurse profile</h1>
           <p className="text-sm mb-7" style={{ color: 'var(--g600)' }}>Free forever — no credit card required</p>
 
           {/* Step indicator */}
@@ -208,7 +208,7 @@ export default function NurseRegisterPage() {
             {STEPS.map((label, i) => (
               <div key={label} className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all"
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold transition-all"
                     style={{
                       background: step > i ? 'var(--sage)' : step === i ? 'var(--plum)' : 'var(--g100)',
                       color: step >= i ? 'white' : 'var(--g400)',
@@ -228,9 +228,9 @@ export default function NurseRegisterPage() {
             ))}
           </div>
 
-          <div className="rounded-2xl border p-7" style={{ background: 'white', borderColor: 'var(--g100)' }}>
+          <div className="rounded-lg border p-7 shadow-[var(--shadow-sm)]" style={{ background: 'var(--surface)', borderColor: 'var(--g100)' }}>
             {error && (
-              <div className="mb-5 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm p-3">
+              <div className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
                 {error}
               </div>
             )}
@@ -244,7 +244,7 @@ export default function NurseRegisterPage() {
                 <div className="flex items-center gap-4 mb-2">
                   <div
                     onClick={() => fileRef.current?.click()}
-                    className="w-16 h-16 rounded-full flex items-center justify-center cursor-pointer border-2 border-dashed overflow-hidden transition-all hover:border-[var(--plum)]"
+                    className="flex h-16 w-16 cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed transition-all hover:border-[var(--plum)]"
                     style={{ borderColor: 'var(--g200)', background: 'var(--cream-mid)' }}>
                     {photoPreview
                       ? <img src={photoPreview} alt="" className="w-full h-full object-cover" />
@@ -283,7 +283,7 @@ export default function NurseRegisterPage() {
                     {LICENSE_TYPES.map(lt => (
                       <button key={lt.value} type="button"
                         onClick={() => update('licenseType', lt.value)}
-                        className="text-left p-3 rounded-xl border text-sm transition-all"
+                        className="focus-ring rounded-lg border p-3 text-left text-sm transition-all"
                         style={{
                           borderColor: form.licenseType === lt.value ? 'var(--plum)' : 'var(--g200)',
                           background: form.licenseType === lt.value ? 'var(--plum-50)' : 'white',
@@ -319,7 +319,7 @@ export default function NurseRegisterPage() {
                     </label>
                     <div
                       onClick={() => certRef.current?.click()}
-                      className="rounded-xl border-2 border-dashed p-6 text-center cursor-pointer transition-all hover:border-[var(--plum)]"
+                      className="cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-all hover:border-[var(--plum)]"
                       style={{ borderColor: certFileName ? 'var(--sage)' : 'var(--g200)', background: certFileName ? 'var(--sage-50)' : 'var(--cream)' }}>
                       {certFileName ? (
                         <div className="flex items-center justify-center gap-2">
@@ -338,7 +338,7 @@ export default function NurseRegisterPage() {
                   </div>
                 )}
 
-                <p className="text-xs rounded-xl p-3" style={{ background: 'var(--plum-50)', color: 'var(--plum)' }}>
+                <p className="rounded-lg p-3 text-xs" style={{ background: 'var(--plum-50)', color: 'var(--plum)' }}>
                   All workers complete a Checkr background check after registration. Worker pays the Checkr fee directly.
                 </p>
 
@@ -387,7 +387,7 @@ export default function NurseRegisterPage() {
                     onChange={e => update('bio', e.target.value)}
                     rows={3}
                     placeholder="Tell hospitals about your experience and what makes you a great hire..."
-                    className="block w-full rounded-xl border px-3 py-2.5 text-sm resize-y focus:outline-none focus:ring-2"
+                    className="focus-ring block w-full resize-y rounded-lg border px-3 py-2.5 text-sm"
                     style={{ borderColor: 'var(--g200)', color: 'var(--ink)' }}
                   />
                 </div>

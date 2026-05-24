@@ -5,10 +5,12 @@ import { createClient } from '@/lib/supabase/server'
 import Navbar from '@/components/layout/Navbar'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
+import Button from '@/components/ui/Button'
+import StatCard from '@/components/ui/StatCard'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import {
   Briefcase, CheckCircle, Clock, DollarSign, AlertCircle,
-  ArrowRight, Star, Shield
+  ArrowRight, Star, Shield, UserRound
 } from 'lucide-react'
 
 export default async function NurseDashboard({ searchParams }: { searchParams: Promise<{ welcome?: string }> }) {
@@ -65,52 +67,76 @@ export default async function NurseDashboard({ searchParams }: { searchParams: P
     return map[status] || 'default'
   }
 
+  const completionItems = [
+    { done: !!nurseProfile.license_number, label: 'Add nursing license', href: '/nurse/profile' },
+    { done: nurseProfile.license_verified, label: 'Verify license with Nursys', href: '/nurse/verify-license' },
+    { done: nurseProfile.background_check_status === 'passed', label: 'Complete background check', href: '/nurse/profile#background-check' },
+    { done: !!nurseProfile.bio, label: 'Write a profile bio', href: '/nurse/profile' },
+  ]
+  const completedSteps = completionItems.filter((item) => item.done).length
+
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="role-bg-nurse flex flex-col min-h-screen">
       <Navbar userRole="nurse" userName={nurseProfile.full_name} />
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+      <main className="container-shell w-full flex-1 py-8 lg:py-10">
         {isWelcome && (
-          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-5 flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
+          <div className="mb-6 flex items-start gap-3 rounded-lg border p-5" style={{ background: 'var(--plum-50)', borderColor: 'var(--plum-100)' }}>
+            <CheckCircle className="w-5 h-5 mt-0.5 shrink-0" style={{ color: 'var(--plum)' }} />
             <div>
-              <p className="font-semibold text-blue-900">Welcome to NurseSquare, {nurseProfile.full_name.split(' ')[0]}!</p>
-              <p className="text-sm text-blue-700 mt-1">
+              <p className="font-semibold" style={{ color: 'var(--ink)' }}>Welcome to NurseSquare, {nurseProfile.full_name.split(' ')[0]}.</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--g600)' }}>
                 Complete your profile and run your background check to start applying for jobs.
               </p>
             </div>
           </div>
         )}
 
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500 mt-1">Welcome back, {nurseProfile.full_name.split(' ')[0]}</p>
-        </div>
+        <section className="role-panel-nurse mb-8 rounded-lg border p-6 shadow-[var(--shadow-md)] lg:p-7">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <div className="mb-3 inline-flex items-center gap-2 rounded-md px-2.5 py-1 text-[10px] font-bold uppercase" style={{ background: 'var(--cream-mid)', color: 'var(--g600)' }}>
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: nurseProfile.license_verified ? 'var(--sage)' : 'var(--tang)' }} />
+                {nurseProfile.license_verified ? 'Verified nurse profile' : 'Profile setup in progress'}
+              </div>
+              <h1 className="text-[32px] font-bold leading-tight md:text-[42px]" style={{ color: 'var(--ink)' }}>
+                Welcome back, {nurseProfile.full_name.split(' ')[0]}.
+              </h1>
+              <p className="mt-3 max-w-2xl text-[15px] leading-7" style={{ color: 'var(--g600)' }}>
+                Track applications, placements, credentials, and pay-package changes from one workspace.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/nurse/jobs"><Button variant="primary">Browse jobs</Button></Link>
+              <Link href="/nurse/ledger/new"><Button variant="outline">Add contract</Button></Link>
+            </div>
+          </div>
+        </section>
 
         {/* Checklist */}
         {!profileComplete && (
-          <Card className="mb-6 border-yellow-200 bg-yellow-50">
-            <h3 className="font-semibold text-yellow-900 mb-3 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4" />
-              Complete your profile to start applying
-            </h3>
-            <div className="space-y-2">
-              {[
-                { done: !!nurseProfile.license_number, label: 'Add your nursing license', href: '/nurse/profile' },
-                { done: nurseProfile.license_verified, label: 'License verified via Nursys', href: '/nurse/profile' },
-                { done: nurseProfile.background_check_status === 'passed', label: 'Complete background check ($20–30 via Checkr)', href: '/nurse/profile#background-check' },
-                { done: !!nurseProfile.bio, label: 'Write a bio', href: '/nurse/profile' },
-              ].map(item => (
-                <Link key={item.label} href={item.href} className="flex items-center gap-3 hover:text-blue-700 group">
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                    item.done ? 'border-green-500 bg-green-500' : 'border-gray-300 group-hover:border-blue-500'
-                  }`}>
-                    {item.done && <CheckCircle className="w-3 h-3 text-white" />}
+          <Card className="mb-8" padding="lg">
+            <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+              <div>
+                <h2 className="flex items-center gap-2 text-base font-semibold" style={{ color: 'var(--ink)' }}>
+                  <AlertCircle className="h-4 w-4" style={{ color: 'var(--tang)' }} />
+                  Finish profile setup
+                </h2>
+                <p className="mt-1 text-sm" style={{ color: 'var(--g600)' }}>
+                  {completedSteps} of {completionItems.length} steps complete. Verified profiles appear stronger to hospitals.
+                </p>
+              </div>
+              <div className="h-2 w-full rounded-full md:w-48" style={{ background: 'var(--cream-mid)' }}>
+                <div className="h-2 rounded-full" style={{ width: `${(completedSteps / completionItems.length) * 100}%`, background: 'var(--plum)' }} />
+              </div>
+            </div>
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
+              {completionItems.map(item => (
+                <Link key={item.label} href={item.href} className="group flex items-center gap-3 rounded-lg border p-3 no-underline transition-colors hover:bg-[var(--cream-mid)]" style={{ borderColor: 'var(--g100)', color: 'var(--ink)' }}>
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ background: item.done ? 'var(--sage)' : 'var(--cream-mid)', color: item.done ? 'white' : 'var(--g400)' }}>
+                    {item.done ? <CheckCircle className="h-4 w-4" /> : <ArrowRight className="h-3.5 w-3.5" />}
                   </div>
-                  <span className={`text-sm ${item.done ? 'line-through text-gray-400' : 'text-gray-700'}`}>
-                    {item.label}
-                  </span>
-                  {!item.done && <ArrowRight className="w-3 h-3 text-gray-400 group-hover:text-blue-500" />}
+                  <span className="text-sm font-medium" style={{ color: item.done ? 'var(--g600)' : 'var(--ink)' }}>{item.label}</span>
                 </Link>
               ))}
             </div>
@@ -119,40 +145,29 @@ export default async function NurseDashboard({ searchParams }: { searchParams: P
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {[
-            { label: 'Applications', value: applications?.length || 0, icon: Briefcase, color: 'blue' },
-            { label: 'Active Placements', value: placements?.filter(p => p.escrow_status === 'held').length || 0, icon: Clock, color: 'yellow' },
-            { label: 'Completed', value: placements?.filter(p => p.escrow_status === 'released').length || 0, icon: CheckCircle, color: 'green' },
-            { label: 'Total Earned', value: formatCurrency(totalEarnings), icon: DollarSign, color: 'purple' },
-          ].map(stat => (
-            <Card key={stat.label} padding="sm">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">{stat.label}</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
-                </div>
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-${stat.color}-100`}>
-                  <stat.icon className={`w-5 h-5 text-${stat.color}-600`} />
-                </div>
-              </div>
-            </Card>
-          ))}
+          <StatCard label="Applications" value={applications?.length || 0} icon={Briefcase} tone="plum" />
+          <StatCard label="Active placements" value={placements?.filter(p => p.escrow_status === 'held').length || 0} icon={Clock} />
+          <StatCard label="Completed" value={placements?.filter(p => p.escrow_status === 'released').length || 0} icon={CheckCircle} tone="success" />
+          <StatCard label="Total earned" value={formatCurrency(totalEarnings)} icon={DollarSign} />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Profile status */}
           <div className="lg:col-span-1 space-y-4">
             <Card>
-              <h3 className="font-semibold text-gray-900 mb-4">Profile Status</h3>
+              <h3 className="mb-4 flex items-center gap-2 font-semibold" style={{ color: 'var(--ink)' }}>
+                <UserRound className="h-4 w-4" style={{ color: 'var(--plum)' }} />
+                Profile status
+              </h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">License</span>
+                  <span className="text-sm" style={{ color: 'var(--g600)' }}>License</span>
                   <Badge variant={nurseProfile.license_verified ? 'success' : 'warning'}>
                     {nurseProfile.license_verified ? 'Verified' : 'Pending'}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Background Check</span>
+                  <span className="text-sm" style={{ color: 'var(--g600)' }}>Background check</span>
                   <Badge variant={
                     nurseProfile.background_check_status === 'passed' ? 'success' :
                     nurseProfile.background_check_status === 'failed' ? 'danger' :
@@ -162,37 +177,37 @@ export default async function NurseDashboard({ searchParams }: { searchParams: P
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Availability</span>
+                  <span className="text-sm" style={{ color: 'var(--g600)' }}>Availability</span>
                   <Badge variant={nurseProfile.availability === 'available' ? 'success' : 'default'}>
                     {nurseProfile.availability.replace('_', ' ')}
                   </Badge>
                 </div>
                 {nurseProfile.rating_count > 0 && (
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Rating</span>
+                    <span className="text-sm" style={{ color: 'var(--g600)' }}>Rating</span>
                     <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                      <Star className="w-4 h-4 fill-[var(--gold)]" style={{ color: 'var(--gold)' }} />
                       <span className="text-sm font-semibold">{nurseProfile.rating_avg.toFixed(1)}</span>
-                      <span className="text-xs text-gray-500">({nurseProfile.rating_count})</span>
+                      <span className="text-xs" style={{ color: 'var(--g400)' }}>({nurseProfile.rating_count})</span>
                     </div>
                   </div>
                 )}
               </div>
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <Link href="/nurse/profile" className="text-sm text-blue-600 font-medium hover:text-blue-800 flex items-center gap-1">
+              <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--g100)' }}>
+                <Link href="/nurse/profile" className="flex items-center gap-1 text-sm font-semibold no-underline" style={{ color: 'var(--plum)' }}>
                   Edit profile <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
             </Card>
 
             {nurseProfile.background_check_status === 'not_started' && (
-              <Card className="border-blue-200 bg-blue-50">
+              <Card style={{ background: 'var(--plum-50)' } as React.CSSProperties}>
                 <div className="flex items-start gap-3">
-                  <Shield className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
+                  <Shield className="w-5 h-5 mt-0.5 shrink-0" style={{ color: 'var(--plum)' }} />
                   <div>
-                    <p className="font-semibold text-blue-900 text-sm">Run background check</p>
-                    <p className="text-xs text-blue-700 mt-1">Required to apply for jobs. $20–30 via Checkr.</p>
-                    <Link href="/nurse/profile#background-check" className="mt-2 inline-block text-xs font-semibold text-blue-700 underline">
+                    <p className="font-semibold text-sm" style={{ color: 'var(--ink)' }}>Run background check</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--g600)' }}>Required to apply for jobs. $20-30 via Checkr.</p>
+                    <Link href="/nurse/profile#background-check" className="mt-2 inline-block text-xs font-semibold underline" style={{ color: 'var(--plum)' }}>
                       Start background check →
                     </Link>
                   </div>
@@ -205,8 +220,8 @@ export default async function NurseDashboard({ searchParams }: { searchParams: P
           <div className="lg:col-span-2">
             <Card>
               <div className="flex items-center justify-between mb-5">
-                <h3 className="font-semibold text-gray-900">Recent Applications</h3>
-                <Link href="/nurse/applications" className="text-sm text-blue-600 hover:text-blue-800">
+                <h3 className="font-semibold" style={{ color: 'var(--ink)' }}>Recent applications</h3>
+                <Link href="/nurse/applications" className="text-sm font-semibold no-underline" style={{ color: 'var(--plum)' }}>
                   View all →
                 </Link>
               </div>
@@ -214,17 +229,17 @@ export default async function NurseDashboard({ searchParams }: { searchParams: P
               {applications && applications.length > 0 ? (
                 <div className="space-y-3">
                   {applications.map((app: any) => (
-                    <div key={app.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                    <div key={app.id} className="flex items-center justify-between gap-4 rounded-xl border p-4 last:border" style={{ borderColor: 'var(--g100)' }}>
                       <div>
-                        <p className="font-medium text-gray-900 text-sm">{app.job_postings?.title}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">
+                        <p className="font-medium text-sm" style={{ color: 'var(--ink)' }}>{app.job_postings?.title}</p>
+                        <p className="text-xs mt-1" style={{ color: 'var(--g600)' }}>
                           {app.job_postings?.employer_profiles?.org_name} · {app.job_postings?.city}, {app.job_postings?.state}
                         </p>
-                        <p className="text-xs text-gray-400 mt-0.5">{formatDate(app.applied_at)}</p>
+                        <p className="text-xs mt-1" style={{ color: 'var(--g400)' }}>{formatDate(app.applied_at)}</p>
                       </div>
                       <div className="text-right">
                         <Badge variant={statusBadge(app.status)}>{app.status}</Badge>
-                        <p className="text-xs font-semibold text-gray-700 mt-1">
+                        <p className="text-xs font-semibold mt-2" style={{ color: 'var(--g800)' }}>
                           {formatCurrency(app.job_postings?.weekly_rate || 0)}/wk
                         </p>
                       </div>
@@ -233,9 +248,9 @@ export default async function NurseDashboard({ searchParams }: { searchParams: P
                 </div>
               ) : (
                 <div className="text-center py-10">
-                  <Briefcase className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 text-sm">No applications yet</p>
-                  <Link href="/nurse/jobs" className="mt-3 inline-block text-sm text-blue-600 font-semibold hover:text-blue-800">
+                  <Briefcase className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--g400)' }} />
+                  <p className="text-sm" style={{ color: 'var(--g600)' }}>No applications yet</p>
+                  <Link href="/nurse/jobs" className="mt-3 inline-block text-sm font-semibold no-underline" style={{ color: 'var(--plum)' }}>
                     Browse open jobs →
                   </Link>
                 </div>
