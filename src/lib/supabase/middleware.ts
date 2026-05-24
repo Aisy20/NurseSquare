@@ -36,10 +36,16 @@ export async function updateSession(request: NextRequest) {
   const protectedHospitalPaths = ['/hospital']
   const protectedAdminPaths = ['/admin']
   const authPaths = ['/auth']
+  // Routes under a protected tree that are intentionally public. The job board
+  // (list + detail) is browsable without an account; applying still requires
+  // login, gated in-page.
+  const publicPaths = ['/nurse/jobs']
 
   const path = request.nextUrl.pathname
 
-  if (!user && (
+  const isPublicPath = publicPaths.some(p => path === p || path.startsWith(`${p}/`))
+
+  if (!user && !isPublicPath && (
     protectedNursePaths.some(p => path.startsWith(p)) ||
     protectedHospitalPaths.some(p => path.startsWith(p)) ||
     protectedAdminPaths.some(p => path.startsWith(p))
