@@ -109,7 +109,6 @@ export function computeTaxHomeStatus(
   const ranked365 = toRanked(sum365.byState)
   const ranked730 = toRanked(sum730.byState)
 
-  const maxAway365 = ranked365.find((r) => r.state !== taxHome) ?? null
   const maxAway730 = ranked730.find((r) => r.state !== taxHome) ?? null
 
   const reasons: string[] = []

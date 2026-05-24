@@ -6,7 +6,7 @@ import Navbar from '@/components/layout/Navbar'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { Shield, ArrowLeft, DollarSign, Clock, CheckCircle, AlertCircle } from 'lucide-react'
+import { Shield, ArrowLeft, DollarSign, Clock, AlertCircle } from 'lucide-react'
 
 export default async function AdminPaymentsPage() {
   const supabase = await createClient()

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { sendEmail, emailTemplates } from '@/lib/resend'
 import { daysUntilExpiry } from '@/lib/ledger/credentials/types'
+import { verifyBearerToken } from '@/lib/http/bearer'
 
 const THRESHOLDS = [30, 14, 7, 0]
 
@@ -22,10 +23,9 @@ function getEmail(row: CredentialRow): string | null {
 }
 
 export async function GET(req: NextRequest) {
-  const auth = req.headers.get('authorization')
-  const expected = process.env.CRON_SECRET
-  if (!expected) return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 503 })
-  if (auth !== `Bearer ${expected}`) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const auth = verifyBearerToken(req.headers.get('authorization'), process.env.CRON_SECRET)
+  if (auth === 'missing_secret') return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 503 })
+  if (auth !== 'authorized') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const supabase = createServiceClient()
   const today = new Date()

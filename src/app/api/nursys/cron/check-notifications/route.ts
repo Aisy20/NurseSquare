@@ -6,6 +6,7 @@ import {
   getNotificationLookupResult,
   STATUS_CHANGE_TRIGGERS_RECHECK,
 } from '@/lib/nursys'
+import { verifyBearerToken } from '@/lib/http/bearer'
 
 // Cron-driven notification sweep. Hits NCSBN /notificationlookup for a recent
 // window, polls until complete (bounded), and clears license_verified for any
@@ -17,20 +18,13 @@ import {
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.CRON_SECRET
-  if (!secret) return false
-  const header = req.headers.get('authorization') || ''
-  return header === `Bearer ${secret}`
-}
-
 function ymd(d: Date): string {
   return d.toISOString().slice(0, 10)
 }
 
 // Vercel Cron triggers via GET with Authorization: Bearer ${CRON_SECRET}.
 export async function GET(req: NextRequest) {
-  if (!isAuthorized(req)) {
+  if (verifyBearerToken(req.headers.get('authorization'), process.env.CRON_SECRET) !== 'authorized') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   if (!nursysConfigured()) {

@@ -22,15 +22,12 @@ export default async function BrowseNursesPage({
 
   let userRole = null
   let userName = null
-  let employerProfile = null
-
   if (user) {
     const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
     userRole = profile?.role
     userName = user.email?.split('@')[0]
     if (userRole === 'hospital') {
       const { data: ep } = await supabase.from('employer_profiles').select('*').eq('user_id', user.id).single()
-      employerProfile = ep
       userName = ep?.org_name ?? userName
     }
   }

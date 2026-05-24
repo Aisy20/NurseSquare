@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import { CheckCircle, Sparkles } from 'lucide-react'
+import { HERO_PHOTO } from '@/lib/marketing/people'
 
 export default function HeroPhoto() {
   return (
@@ -17,8 +18,8 @@ export default function HeroPhoto() {
         style={{ boxShadow: '0 32px 64px rgba(28,16,68,0.22)' }}
       >
         <Image
-          src="https://images.unsplash.com/photo-1612531386530-97286d97c2d2?w=900&q=80&auto=format&fit=crop"
-          alt="Travel nurse in scrubs"
+          src={HERO_PHOTO.url}
+          alt={HERO_PHOTO.alt}
           fill
           priority
           sizes="(min-width: 1024px) 45vw, 100vw"
