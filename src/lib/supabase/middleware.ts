@@ -39,7 +39,7 @@ export async function updateSession(request: NextRequest) {
   // Routes under a protected tree that are intentionally public. The job board
   // (list + detail) is browsable without an account; applying still requires
   // login, gated in-page.
-  const publicPaths = ['/nurse/jobs']
+  const publicPaths = ['/nurse/jobs', '/jobs']
 
   const path = request.nextUrl.pathname
 

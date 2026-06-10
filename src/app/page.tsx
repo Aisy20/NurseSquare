@@ -107,7 +107,7 @@ export default async function LandingPage() {
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
-                  href="/nurse/jobs"
+                  href="/jobs"
                   className="focus-ring inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--g200)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--g800)] no-underline transition hover:border-[var(--plum)] hover:text-[var(--plum)]"
                 >
                   Browse jobs
