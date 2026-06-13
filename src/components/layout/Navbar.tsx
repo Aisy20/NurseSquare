@@ -104,7 +104,7 @@ export default function Navbar({ userRole, userName }: NavbarProps) {
         : 'rgba(250,250,247,0.94)'
 
   const publicLinks = [
-    { href: '/nurse/jobs', label: 'Jobs', icon: BriefcaseBusiness },
+    { href: '/jobs', label: 'Jobs', icon: BriefcaseBusiness },
     { href: '/auth/register/hospital', label: 'Hospitals', icon: Building2 },
     { href: '/about', label: 'About', icon: Info },
     { href: '/contact', label: 'Contact', icon: Mail },

@@ -66,7 +66,7 @@ export default function Footer() {
             <h3 className="text-white font-semibold mb-4 text-sm">Nurses</h3>
             <ul className="space-y-2.5 text-sm">
               <li><Link href="/auth/register/nurse" className="no-underline transition-colors hover:text-white" style={{ color: 'var(--g400)' }}>Join Free</Link></li>
-              <li><Link href="/nurse/jobs" className="no-underline transition-colors hover:text-white" style={{ color: 'var(--g400)' }}>Browse Jobs</Link></li>
+              <li><Link href="/jobs" className="no-underline transition-colors hover:text-white" style={{ color: 'var(--g400)' }}>Browse Jobs</Link></li>
               <li><Link href="/nurse/dashboard" className="no-underline transition-colors hover:text-white" style={{ color: 'var(--g400)' }}>Dashboard</Link></li>
             </ul>
           </div>

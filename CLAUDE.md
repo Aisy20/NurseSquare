@@ -6,16 +6,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Stack and commands
 
-Next.js 16 (App Router) + React 19 + TypeScript + Tailwind v4. Backend is Supabase (Postgres + Auth + RLS). External integrations: Stripe (payments/escrow), Resend (email), Checkr (background checks), Nursys/NCSBN e-Notify (RN license verification).
+Next.js 16 (App Router) + React 19 + TypeScript + Tailwind v4. Backend is Supabase (Postgres + Auth + RLS). External integrations: Stripe (payments/escrow), Resend (email), Checkr (background checks), Nursys/NCSBN e-Notify (RN license verification), Anthropic Claude (AI pay package extraction), Postmark (inbound email), Twilio (inbound SMS/voice).
 
 - `npm run dev` — local dev server. The `.env.local` template uses `NEXT_PUBLIC_APP_URL=http://localhost:3001`, but `next dev` defaults to `:3000`. Pass `-p 3001` if email links / OAuth callbacks need to match.
 - `npm run build` / `npm run start` — production build / serve.
 - `npm run lint` — ESLint via `eslint-config-next` (core-web-vitals + typescript).
-- `npm test` (`vitest run`) — unit tests in `tests/**/*.test.ts`. `npm run test:watch` for watch mode. Run a single file/test with `npx vitest run tests/ledger/diff.test.ts` or `-t '<name pattern>'`. Coverage is gated: v8 thresholds (70% lines/statements/functions, 60% branches) apply only to `src/lib/ledger/**`.
-- `npm run test:e2e` (`playwright test`) — Playwright e2e in `tests/e2e/*.spec.ts`. The config auto-starts `next dev -p 3001` (or set `E2E_BASE_URL` to hit an external server). Tests log in through the real UI using the seeded demo accounts, so **run `npm run seed:test` first** (or the journey specs fail at login).
-- `npm run seed:test` — upserts the three demo accounts (`nurse@test.com`/`Test123`, `employer@test.com`/`Test456`, `admin@test.com`/`Test789`) advertised on `/auth/login`; `-- --clean` deletes them. Requires `SUPABASE_SERVICE_ROLE_KEY`. Keep these in sync with the auto-fill buttons on the login page and `tests/e2e/helpers/auth.ts`.
-- `npm run extract -- "<raw text>" [email|sms|voice|manual]` — one-off CLI for the Ledger pay-package extractor (needs `ANTHROPIC_API_KEY`).
-- Path alias: `@/*` → `./src/*` (mirrored in `vitest.config.ts`).
+- `npm test` — vitest unit tests (`tests/**/*.test.ts`). Run a single file: `npx vitest run tests/ledger/diff.test.ts`.
+- `npm run test:watch` — vitest in watch mode.
+- `npm run test:e2e` — Playwright against `:3001` (auto-starts dev server; use `E2E_BASE_URL` to point at an external server instead).
+- `npm run seed:test` — seed test accounts for e2e flows (`scripts/seed-test-accounts.ts`).
+- `npm run extract` — dev utility to test AI pay package extraction against a local file (`scripts/extract.ts`).
+- Path alias: `@/*` → `./src/*`.
+
+Coverage thresholds (vitest) apply only to `src/lib/ledger/**`: 70% lines/statements/functions, 60% branches.
 
 ## Next.js 16 specifics that diverge from your training data
 
@@ -26,10 +29,11 @@ Next.js 16 (App Router) + React 19 + TypeScript + Tailwind v4. Backend is Supaba
 
 Three user roles live in `public.users.role`: `nurse`, `hospital`, `admin`. Each role has its own top-level route tree:
 
-- `/nurse/*` — nurse dashboard, applications, profile, verify-license, payments
+- `/nurse/*` — nurse dashboard, applications, profile, verify-license, payments, ledger, credentials, tax-home
 - `/hospital/*` — employer dashboard, post-job, applicants, billing, profile
-- `/admin/*` — admin tools (users, jobs, payments)
+- `/admin/*` — admin tools (users, jobs, payments, nursys)
 - `/auth/*` — login, register (split into `/auth/register/nurse` and `/auth/register/hospital`), forgot/reset password
+- `/share/*` — public anonymous sharing pages (no auth required)
 
 `src/proxy.ts` → `src/lib/supabase/middleware.ts:updateSession` is the gatekeeper. It:
 1. Refreshes the Supabase session cookie on every request.
@@ -45,7 +49,7 @@ Pick the right factory for the context — they are not interchangeable:
 - `@/lib/supabase/client.ts` — `createClient()` for **client components** (browser, uses `createBrowserClient`).
 - `@/lib/supabase/server.ts` — `async createClient()` for **server components and route handlers** (reads `cookies()` from `next/headers`).
 - `@/lib/supabase/middleware.ts` — `updateSession(request)` for the **proxy/edge** path only.
-- `@/lib/supabase/service.ts` — `createServiceClient()` uses the **`SUPABASE_SERVICE_ROLE_KEY`** and **bypasses RLS**. Server-only, never import into client code. Used by webhook handlers, crons, and the seed script that act without a logged-in user. The default RLS-gating helper for authenticated Ledger routes is `requireAuth()` in `@/lib/ledger/access.ts` — prefer it over the service client whenever a user session exists.
+- `@/lib/supabase/service.ts` — `createServiceClient()` for **admin/server operations that must bypass RLS** (uses `SUPABASE_SERVICE_ROLE_KEY`). Never expose this to the browser.
 
 All four fall back to placeholder URL/key strings when env vars are missing or malformed, so the app boots in CI and dev without crashing — production deploys must have `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` set or auth silently no-ops.
 
@@ -54,6 +58,40 @@ RLS is enabled on every table; `supabase/schema.sql` is the source of truth for 
 - `after_review_insert` recomputes `nurse_profiles.rating_avg` and `rating_count`. Don't write those columns directly.
 
 The `nurse_profiles` table has Nursys-only columns (`address1`, `ssn_last_four`, `birth_year`, `practice_setting`, `ncsbn_id`, `nursys_transaction_id`, `nursys_lookup_transaction_id`, `nursys_enrolled_at`, `license_verified_at`, `license_status_detail`) added via the `ALTER TABLE` block at the bottom of `schema.sql`. New Supabase projects must run that block or the verify route will throw on update.
+
+## Ledger: AI-powered pay package tracking
+
+The most architecturally novel subsystem. Lives in `src/lib/ledger/` + `src/app/api/ledger/*` + `src/app/nurse/ledger/`.
+
+Nurses forward recruiter offers via **email** (Postmark inbound webhook) or **SMS/voice** (Twilio webhook). Each message auto-creates a `ledger_contracts` row and triggers AI extraction. Later, the nurse uploads the signed PDF, which triggers a second extraction and a diff comparing the quoted vs signed pay package.
+
+### Ingest channels
+- **Email**: `POST /api/ledger/webhooks/postmark` — verified via Basic Auth (`POSTMARK_INBOUND_SECRET`). Routes by `users.forwarding_email` to find the owning nurse.
+- **SMS/voice**: `POST /api/ledger/webhooks/twilio` — verified via HMAC-SHA1 Twilio signature (`TWILIO_AUTH_TOKEN`).
+- Both use `extractPayPackage()` from `src/lib/ledger/extractor.ts` and log every Claude call to `ledger_llm_calls`.
+
+### AI models (`src/lib/ledger/types.ts: LEDGER_MODELS`)
+- **Extraction** (`extract_quote`, `extract_signed`): `claude-sonnet-4-6` — forced tool use against `submit_pay_package`. Uses prompt caching on the system prompt (`cache_control: { type: 'ephemeral' }`). Retries up to 3× with exponential backoff on rate limits. Flags `needsReview` when `extraction_confidence < 0.6`.
+- **Text diff** (`diff_text`): `claude-haiku-4-5-20251001` — forced tool use against `report_text_diff` to judge whether two contract clauses materially differ in meaning.
+
+### Contract flow and diff
+`computeAndPersistDiffIfReady()` in `src/lib/ledger/persist.ts` is called after any quote or signed upload. When both a quote and a signed contract exist on the same `ledger_contract`, it calls `computeDiff()` from `src/lib/ledger/diff.ts`, which:
+- Compares numeric fields (money, hours) with `WORSE_CENTS_THRESHOLD = 2500` / `WORSE_PCT_THRESHOLD = 3`
+- Compares dates with `DATE_SHIFT_DAYS_THRESHOLD = 7` days
+- Calls Claude Haiku for text fields (`cancellation_terms`, `call_off_policy`, `floating_policy`, `holiday_pay`)
+- Sets `any_worse` / `any_material_change` summary flags
+
+### Route auth pattern
+Ledger API routes use `requireAuth()` from `src/lib/ledger/access.ts` instead of calling Supabase directly. It returns either an `AuthContext` or a `NextResponse` error — use `isErrorResponse()` to narrow before continuing. `loadContractForOwner()` enforces owner/admin access on individual contracts.
+
+### Sharing
+Contracts (`/api/ledger/contracts/[id]/share`) and credentials (`/api/ledger/credentials/[id]/share`) generate slug tokens stored in the DB. Public pages at `/share/[slug]` and `/share/credential/[slug]` render anonymized data via `src/lib/ledger/anonymize.ts` (strips PII) — no auth required.
+
+### Credentials subsystem
+`src/lib/ledger/credentials/` handles nurse credential storage. AHA verification logic lives in `src/lib/ledger/credentials/aha.ts`. A second cron (`vercel.json`: `0 14 * * *`) hits `/api/ledger/credentials/cron/expiry-reminders` to notify nurses of expiring credentials.
+
+### Tax home
+`src/lib/taxhome/compute.ts` provides tax home determination logic, surfaced at `/nurse/tax-home` and `/api/ledger/tax-home/*`.
 
 ## Nursys license verification (2-phase async state machine)
 
@@ -105,4 +143,4 @@ The Stripe SDK is pinned to `apiVersion: '2026-03-25.dahlia'`. Don't bump this w
 
 ## Required env vars
 
-Production needs all of: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `NEXT_PUBLIC_APP_URL`, `NURSYS_BASE_URL`, `NURSYS_API_USERNAME`, `NURSYS_API_PASSWORD`, `CRON_SECRET`, `ANTHROPIC_API_KEY` (Ledger extraction), `POSTMARK_INBOUND_SECRET` + `TWILIO_AUTH_TOKEN` (Ledger ingestion webhooks). Optional: `CHECKR_API_KEY`, `CHECKR_WEBHOOK_SECRET`, `CHECKR_PACKAGE_SLUG`, `AHA_API_KEY`, `AHA_API_BASE_URL` (all fall through gracefully when unset).
+Production needs all of: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `NEXT_PUBLIC_APP_URL`, `NURSYS_BASE_URL`, `NURSYS_API_USERNAME`, `NURSYS_API_PASSWORD`, `CRON_SECRET`, `ANTHROPIC_API_KEY` (ledger AI extraction). Optional: `CHECKR_API_KEY`, `CHECKR_WEBHOOK_SECRET`, `CHECKR_PACKAGE_SLUG`, `POSTMARK_INBOUND_SECRET`, `TWILIO_AUTH_TOKEN` (both optional — their webhook routes return 503 when unset).
