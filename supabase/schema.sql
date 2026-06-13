@@ -33,7 +33,8 @@ CREATE TABLE nurse_profiles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   full_name TEXT NOT NULL,
-  license_type TEXT CHECK (license_type IN ('RN','LPN','NP','CRNA','CNA','HHA')),
+  -- RN/PN/CNM/CRNA/CNS/CNP = Nursys-verifiable (spec Appendix A.2); CNA/HHA = aides.
+  license_type TEXT CHECK (license_type IN ('RN','PN','CNM','CRNA','CNS','CNP','CNA','HHA')),
   license_number TEXT,
   license_state TEXT,
   specialty TEXT,

@@ -31,7 +31,11 @@ function authHeaders() {
 async function call<T = any>(path: string, init: { method: 'GET' | 'POST'; body?: unknown }): Promise<T> {
   const { BASE_URL } = env()
   if (!BASE_URL) throw new Error('NURSYS_BASE_URL not set')
-  const res = await fetch(`${BASE_URL}${path}`, {
+  // §3.1.5: method paths (/managenurselist, …) append to the redacted base URL.
+  // The e-Notify dashboard shows the base URL WITH a trailing slash, so strip it
+  // to avoid a double slash (…/enotify//managenurselist) if it's copied verbatim.
+  const base = BASE_URL.replace(/\/+$/, '')
+  const res = await fetch(`${base}${path}`, {
     method: init.method,
     headers: authHeaders(),
     body: init.body ? JSON.stringify(init.body) : undefined,
@@ -41,7 +45,13 @@ async function call<T = any>(path: string, init: { method: 'GET' | 'POST'; body?
   let data: any
   try { data = text ? JSON.parse(text) : {} } catch { data = { raw: text } }
   if (!res.ok) {
-    const err: any = new Error(`Nursys ${path} ${res.status}: ${data?.message || text}`)
+    // §3.1.6: exceeding the ~25 req/min cap returns 403 and blocks further
+    // requests for 30 minutes. A 403 can also mean the source IP isn't allowlisted
+    // through NCSBN's WAF. Label it distinctly so it isn't misread as bad creds.
+    const detail = res.status === 403
+      ? 'HTTP 403 — rate limited/blocked (25 req/min cap, 30-min block) or source IP not allowlisted'
+      : (data?.message || text)
+    const err: any = new Error(`Nursys ${path} ${res.status}: ${detail}`)
     err.status = res.status
     err.body = data
     throw err
@@ -51,9 +61,6 @@ async function call<T = any>(path: string, init: { method: 'GET' | 'POST'; body?
 
 // ============================================================
 // Practice settings — user-facing labels.
-// TODO(nursys): map each label to the real NCSBN HospitalPracticeSetting ID
-// from the spec appendix. Until then every label is sent as "Other" (id=0)
-// with the label text placed in HospitalPracticeSettingOther.
 // ============================================================
 export const PRACTICE_SETTING_LABELS = [
   'Hospital — Acute care',
@@ -78,22 +85,61 @@ export const PRACTICE_SETTING_LABELS = [
 
 export type PracticeSettingLabel = typeof PRACTICE_SETTING_LABELS[number]
 
-// TODO(nursys): replace this stub with real ID mapping.
+// Map each label to its NCSBN HospitalPracticeSetting ID from e-Notify spec
+// Appendix A.4 (v3.1.3). A `null` means "no authoritative match" and the label
+// is sent as Other (0) with its text in HospitalPracticeSettingOther — the safe
+// default NCSBN accepts. Several labels have no 1:1 value in A.4, so the picks
+// marked JUDGMENT are best-fit clinical interpretations, not exact spec matches
+// — revise if NCSBN reporting needs a different bucket.
+export const PRACTICE_SETTING_NURSYS_IDS: Record<PracticeSettingLabel, number | null> = {
+  'Hospital — Acute care': 8,            // JUDGMENT: A.4 has no "acute care"; Medical Surgical is the general inpatient bucket
+  'Hospital — Intensive care (ICU)': 1,  // Critical Care
+  'Hospital — Emergency (ER)': 21,       // Emergency Room
+  'Hospital — Operating room (OR)': 20,  // Operating Room
+  'Hospital — Labor & delivery': 7,      // Obstetrics
+  'Hospital — Pediatrics': 12,           // Pediatrics/Neonatal
+  'Hospital — Oncology': 10,             // Oncology
+  'Hospital — Telemetry / Step-down': null, // no A.4 match → Other (kept distinct from Cardiology, 26)
+  'Long-term care / Nursing home': 5,    // JUDGMENT: no LTC value; Geriatric/Gerontology fits the population
+  'Home health': 4,                      // JUDGMENT: no home-health value; Community Health is the nearest
+  'Ambulatory / Outpatient clinic': null, // no A.4 match → Other
+  'Hospice / Palliative': 11,            // Palliative Care
+  'Mental health / Psychiatric': 14,     // Psychiatric/Mental Health
+  'Correctional health': null,           // no A.4 match → Other
+  'School nursing': null,                // no A.4 match → Other
+  'Occupational / Public health': 9,     // JUDGMENT: Occupational health (public-health half overlaps Community Health, 4)
+  'Telehealth': null,                    // no A.4 match → Other
+  // "Other" is the spec's literal Other bucket (A.4 value 0); the text travels
+  // in HospitalPracticeSettingOther.
+  'Other': 0,
+}
+
+// Resolve a practice-setting label to the NCSBN request fields. When the label
+// has a known non-zero ID we send it in HospitalPracticeSetting and leave the
+// free-text field empty; otherwise we fall back to Other (0) carrying the label
+// text. HospitalPracticeSetting itself is pipe-delimited, so a future
+// multi-select can join several IDs with '|'.
 export function practiceSettingToNursys(label: string) {
-  return { HospitalPracticeSetting: '0', HospitalPracticeSettingOther: label }
+  const id = (PRACTICE_SETTING_NURSYS_IDS as Record<string, number | null>)[label] ?? null
+  if (id === null || id === 0) {
+    return { HospitalPracticeSetting: '0', HospitalPracticeSettingOther: label }
+  }
+  return { HospitalPracticeSetting: String(id), HospitalPracticeSettingOther: '' }
 }
 
 // ============================================================
 // Manage Nurse List (async 2-step flow per spec §3.2)
 // ============================================================
 
-export type SubmissionAction = 'A' | 'U' | 'R' // Add | Update | Remove
+// Per A.7 only two codes exist: 'A' (add OR update — invalid values coerce to
+// 'A') and 'R' (remove). There is no separate update code.
+export type SubmissionAction = 'A' | 'R'
 
 export interface ManageNurseListRequest {
   SubmissionActionCode: SubmissionAction
   JurisdictionAbbreviation?: string  // e.g. "TX"
   LicenseNumber?: string
-  LicenseType?: string               // e.g. "RN", "LPN"
+  LicenseType?: string               // A.2 code, e.g. "RN", "PN", "CNP"
   NcsbnId?: string
   Email?: string
   Address1: string
@@ -280,8 +326,8 @@ export function isLicenseCurrentlyValid(license: NurseLookupLicense): {
 }
 
 // ============================================================
-// Notification Lookup — per §3.5 (response shape confirmed).
-// TODO(nursys §3.4): paste the POST request body shape to lock it in.
+// Notification Lookup — per §3.5. Request body { StartDate, EndDate } and the
+// response shape are both confirmed against the spec (§3.5.1 / §3.5.7).
 // ============================================================
 
 export interface NotificationLookupItem {
@@ -360,18 +406,26 @@ export async function retrieveDocuments(documentIds: string[]) {
 }
 
 // ============================================================
-// Change Password (rotate before temp expiry, then every 90 days)
-// TODO(nursys): paste §3.5 (or whichever section) for exact field names.
+// Change Password (rotate every 90 days) — per §3.3.
+// The request body carries ONLY NewPassword; the current password is the one
+// already sent in the `password:` auth header (authHeaders()), not the body.
 // ============================================================
 
 export async function changePassword(newPassword: string) {
+  // Enforce NCSBN's §3.3 complexity rules locally so we fail fast instead of
+  // round-tripping the server's 210 error.
+  if (newPassword.length < 8 || newPassword.length > 50) {
+    throw new Error('New Nursys password must be between 8 and 50 characters')
+  }
+  if (!/[a-z]/.test(newPassword) || !/[A-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+    throw new Error('New Nursys password must contain a lowercase letter, an uppercase letter, and a digit')
+  }
   const { PASSWORD } = env()
-  if (!PASSWORD) throw new Error('NURSYS_API_PASSWORD not set (required as currentPassword)')
+  if (PASSWORD && newPassword === PASSWORD) {
+    throw new Error('New Nursys password must differ from the current password')
+  }
   return call('/changepassword', {
     method: 'POST',
-    body: {
-      CurrentPassword: PASSWORD,
-      NewPassword: newPassword,
-    },
+    body: { NewPassword: newPassword },
   })
 }

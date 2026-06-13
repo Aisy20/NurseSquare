@@ -10,8 +10,12 @@ Next.js 16 (App Router) + React 19 + TypeScript + Tailwind v4. Backend is Supaba
 
 - `npm run dev` — local dev server. The `.env.local` template uses `NEXT_PUBLIC_APP_URL=http://localhost:3001`, but `next dev` defaults to `:3000`. Pass `-p 3001` if email links / OAuth callbacks need to match.
 - `npm run build` / `npm run start` — production build / serve.
-- `npm run lint` — ESLint via `eslint-config-next` (core-web-vitals + typescript). No test framework is configured.
-- Path alias: `@/*` → `./src/*`.
+- `npm run lint` — ESLint via `eslint-config-next` (core-web-vitals + typescript).
+- `npm test` (`vitest run`) — unit tests in `tests/**/*.test.ts`. `npm run test:watch` for watch mode. Run a single file/test with `npx vitest run tests/ledger/diff.test.ts` or `-t '<name pattern>'`. Coverage is gated: v8 thresholds (70% lines/statements/functions, 60% branches) apply only to `src/lib/ledger/**`.
+- `npm run test:e2e` (`playwright test`) — Playwright e2e in `tests/e2e/*.spec.ts`. The config auto-starts `next dev -p 3001` (or set `E2E_BASE_URL` to hit an external server). Tests log in through the real UI using the seeded demo accounts, so **run `npm run seed:test` first** (or the journey specs fail at login).
+- `npm run seed:test` — upserts the three demo accounts (`nurse@test.com`/`Test123`, `employer@test.com`/`Test456`, `admin@test.com`/`Test789`) advertised on `/auth/login`; `-- --clean` deletes them. Requires `SUPABASE_SERVICE_ROLE_KEY`. Keep these in sync with the auto-fill buttons on the login page and `tests/e2e/helpers/auth.ts`.
+- `npm run extract -- "<raw text>" [email|sms|voice|manual]` — one-off CLI for the Ledger pay-package extractor (needs `ANTHROPIC_API_KEY`).
+- Path alias: `@/*` → `./src/*` (mirrored in `vitest.config.ts`).
 
 ## Next.js 16 specifics that diverge from your training data
 
@@ -32,17 +36,18 @@ Three user roles live in `public.users.role`: `nurse`, `hospital`, `admin`. Each
 2. Redirects unauthenticated users hitting `/nurse|/hospital|/admin` to `/auth/login`.
 3. Redirects already-logged-in users hitting `/auth/*` to their role's dashboard (`/nurse/dashboard` for nurses, `/hospital/dashboard` otherwise) by reading `users.role`.
 
-If you add a new protected top-level segment, update the `protectedNursePaths` / `protectedHospitalPaths` / `protectedAdminPaths` arrays in `middleware.ts` — the matcher in `proxy.ts` only excludes static assets.
+If you add a new protected top-level segment, update the `protectedNursePaths` / `protectedHospitalPaths` / `protectedAdminPaths` arrays in `middleware.ts` — the matcher in `proxy.ts` only excludes static assets. The inverse also exists: a `publicPaths` allowlist (currently `['/nurse/jobs']`) carves the **public job board** out of the protected `/nurse` tree so anonymous visitors can browse and deep-link jobs. Marketing/legal pages (`/`, `/about`, `/contact`, `/terms`, `/privacy`, `/hipaa`) and the anonymized share pages (`/share/[slug]`, `/share/credential/[slug]`) live outside the protected trees and need no auth.
 
-## Supabase: three clients, do not mix
+## Supabase: four clients, do not mix
 
 Pick the right factory for the context — they are not interchangeable:
 
 - `@/lib/supabase/client.ts` — `createClient()` for **client components** (browser, uses `createBrowserClient`).
 - `@/lib/supabase/server.ts` — `async createClient()` for **server components and route handlers** (reads `cookies()` from `next/headers`).
 - `@/lib/supabase/middleware.ts` — `updateSession(request)` for the **proxy/edge** path only.
+- `@/lib/supabase/service.ts` — `createServiceClient()` uses the **`SUPABASE_SERVICE_ROLE_KEY`** and **bypasses RLS**. Server-only, never import into client code. Used by webhook handlers, crons, and the seed script that act without a logged-in user. The default RLS-gating helper for authenticated Ledger routes is `requireAuth()` in `@/lib/ledger/access.ts` — prefer it over the service client whenever a user session exists.
 
-All three fall back to placeholder URL/key strings when env vars are missing or malformed, so the app boots in CI and dev without crashing — production deploys must have `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` set or auth silently no-ops.
+All four fall back to placeholder URL/key strings when env vars are missing or malformed, so the app boots in CI and dev without crashing — production deploys must have `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` set or auth silently no-ops.
 
 RLS is enabled on every table; `supabase/schema.sql` is the source of truth for both the schema and the policies. Two triggers do non-obvious work that downstream code relies on:
 - `on_auth_user_created` (on `auth.users` INSERT) auto-creates the `public.users` row, copying `raw_user_meta_data->>'role'`. Registration must set that metadata at signup time.
@@ -73,6 +78,17 @@ Critical invariant: Phase 2 fails closed — if NCSBN returns licenses but none 
 
 **Admin surface.** `/admin/nursys` (page + `NursysAdminTools.tsx`) wraps four admin-only endpoints: `POST/GET /api/nursys/notifications` (manual backfill of the notification sweep — same logic as the cron, but for arbitrary date windows), `GET /api/nursys/documents?ids=…` (discipline/board docs, max 5 IDs/call, also accessible to `hospital`), `POST /api/nursys/remove`, and `POST /api/nursys/change-password`.
 
+## Ledger: AI pay-package extraction + contract diffing
+
+The other large subsystem (`src/lib/ledger/*` + `src/app/api/ledger/*` + nurse-facing pages under `/nurse/*`). It is independent of the hospital↔nurse marketplace flow: it helps a travel nurse capture recruiter quotes, compare them against the signed contract, and rate recruiters/agencies. Every `ledger_*` table is RLS-scoped to the owning nurse (hospitals get read-only on placement-linked rows; admins full access) — route handlers gate with `requireAuth()` from `lib/ledger/access.ts` and helpers like `loadContractForOwner`.
+
+- **LLM extraction (`extractor.ts`).** `extractPayPackage()` calls the Anthropic SDK (`@anthropic-ai/sdk`, `ANTHROPIC_API_KEY`) with a forced tool call (`submit_pay_package`) and validates the result against `PayPackageSchema` (Zod, `types.ts`). Models are pinned in `LEDGER_MODELS` (`extract: claude-sonnet-4-6`, `diff: claude-haiku-4-5-...`). All money is integer **cents**. Retries with backoff on rate limits; sets `needsReview` when `extraction_confidence < 0.6`. Every call is logged to `ledger_llm_calls` (token + latency) for admin cost tracking — don't drop the `onCall`/log plumbing. The system prompt + few-shots in `prompts.ts` encode domain rules (one-time vs weekly travel pay, blended vs taxable overtime basis, net-pay ranges); update them together with the schema.
+- **Ingestion webhooks.** Recruiter messages arrive via `/api/ledger/webhooks/postmark` (inbound email, Basic-auth verified against `POSTMARK_INBOUND_SECRET`) and `/api/ledger/webhooks/twilio` (inbound SMS, HMAC-SHA1 signature verified with `TWILIO_AUTH_TOKEN`). Both verifiers live in `webhook-verify.ts` and use `timingSafeEqual` — keep them constant-time. Contracts can also be built from a PDF via `/api/ledger/contracts/from-pdf`.
+- **Quote vs signed diff.** `/api/ledger/contracts/[id]/diff` runs `diff.ts` to compare the extracted quote(s) against the signed contract field-by-field (text + categorical deltas), persisting to `ledger_diffs`.
+- **Anonymized public shares.** `/api/ledger/contracts/[id]/share` and `.../credentials/[id]/share` mint slugs in `ledger_share_links` / `credential_share_links`, served publicly at `/share/[slug]` and `/share/credential/[slug]`. `anonymize.ts` redacts agency/recruiter/facility names to stable `AGY-/REC-/FAC-` SHA-256 hash labels before anything leaves the owner's account — run shared payloads through it.
+- **Credentials vault.** `credentials/*` manages a nurse's certs (BLS/ACLS/PALS/etc.). AHA-issued certs are machine-verifiable via `/api/ledger/credentials/[id]/verify` when `AHA_API_KEY` + `AHA_API_BASE_URL` are set (`credentials/aha.ts`, falls through gracefully otherwise). A daily cron `/api/ledger/credentials/cron/expiry-reminders` emails upcoming expirations.
+- **Tax-home tracker.** `lib/taxhome/compute.ts` + `/nurse/tax-home` + `/api/ledger/tax-home/*` count days-in-state across contract windows to flag IRS tax-home risk (`safe`/`warning`/`risk`). Pure function, well unit-tested — see `tests/taxhome/compute.test.ts`.
+
 ## Stripe: platform fee + escrow + tiered cancellation
 
 `src/lib/stripe.ts` centralizes the money math. `PLATFORM_FEE_PERCENT = 0.15`. `calculateCancellationFee` is tiered by hours-before-start (≥168h: 0, ≥72h: 25%, ≥24h: 50%, <24h: 100% of weekly rate) — change these together with whatever UI/contract text quotes them.
@@ -89,4 +105,4 @@ The Stripe SDK is pinned to `apiVersion: '2026-03-25.dahlia'`. Don't bump this w
 
 ## Required env vars
 
-Production needs all of: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `NEXT_PUBLIC_APP_URL`, `NURSYS_BASE_URL`, `NURSYS_API_USERNAME`, `NURSYS_API_PASSWORD`, `CRON_SECRET`. Optional: `CHECKR_API_KEY`, `CHECKR_WEBHOOK_SECRET`, `CHECKR_PACKAGE_SLUG` (Checkr falls through gracefully when unset).
+Production needs all of: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `NEXT_PUBLIC_APP_URL`, `NURSYS_BASE_URL`, `NURSYS_API_USERNAME`, `NURSYS_API_PASSWORD`, `CRON_SECRET`, `ANTHROPIC_API_KEY` (Ledger extraction), `POSTMARK_INBOUND_SECRET` + `TWILIO_AUTH_TOKEN` (Ledger ingestion webhooks). Optional: `CHECKR_API_KEY`, `CHECKR_WEBHOOK_SECRET`, `CHECKR_PACKAGE_SLUG`, `AHA_API_KEY`, `AHA_API_BASE_URL` (all fall through gracefully when unset).
