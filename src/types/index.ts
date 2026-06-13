@@ -7,7 +7,9 @@ export interface User {
   created_at: string
 }
 
-export type LicenseType = 'RN' | 'LPN' | 'NP' | 'CRNA' | 'CNA' | 'HHA'
+// RN/PN/CNM/CRNA/CNS/CNP are the Nursys-verifiable codes (spec Appendix A.2);
+// CNA/HHA are platform-only aide types never sent to Nursys.
+export type LicenseType = 'RN' | 'PN' | 'CNM' | 'CRNA' | 'CNS' | 'CNP' | 'CNA' | 'HHA'
 
 export interface NurseProfile {
   id: string

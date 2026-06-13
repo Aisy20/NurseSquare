@@ -11,6 +11,33 @@ import {
   type ManageNurseListRequest,
 } from '@/lib/nursys'
 
+// Ownership gate. Both handlers take a `nurseProfileId` straight from the
+// request, so without this anyone could trigger real (billable) NCSBN calls
+// for an arbitrary identity. Verification is owner-only: under current RLS a
+// nurse has FOR ALL on their own profile while hospital/admin get SELECT only,
+// so only the owning nurse can ever persist the result anyway.
+async function requireProfileOwner(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  nurseProfileId: string,
+): Promise<NextResponse | null> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // RLS scopes a nurse's SELECT to their own row, so a missing row here means
+  // "doesn't exist or isn't yours" — both collapse to a 404/403 without leaking
+  // which. We still compare user_id explicitly to stay correct if RLS widens.
+  const { data: owner, error } = await supabase
+    .from('nurse_profiles')
+    .select('user_id')
+    .eq('id', nurseProfileId)
+    .single()
+  if (error || !owner) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+  if ((owner as { user_id: string }).user_id !== user.id) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+  return null
+}
+
 // Submit a nurse to Nursys e-Notify. Returns a TransactionId; the caller
 // must poll GET /api/nursys/verify?transactionId=... after ~5 minutes.
 export async function POST(req: NextRequest) {
@@ -29,6 +56,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing nurseProfileId' }, { status: 400 })
   }
 
+  const supabase = await createClient()
+  const denied = await requireProfileOwner(supabase, nurseProfileId)
+  if (denied) return denied
+
   if (!nursysConfigured()) {
     // Dev fallback: accept any 5+ char license.
     const verified = typeof licenseNumber === 'string'
@@ -37,7 +68,6 @@ export async function POST(req: NextRequest) {
       && licenseState.length === 2
 
     if (verified) {
-      const supabase = await createClient()
       await supabase
         .from('nurse_profiles')
         .update({ license_verified: true })
@@ -68,24 +98,12 @@ export async function POST(req: NextRequest) {
 
   const { HospitalPracticeSetting, HospitalPracticeSettingOther } = practiceSettingToNursys(practiceSettingLabel)
 
-  // If this nurse is already enrolled at NCSBN (has a prior transaction id
-  // or enrollment timestamp), send 'U' (Update) instead of 'A' (Add).
-  // NCSBN rejects a second 'A' for an already-enrolled identity.
-  const supabase = await createClient()
-  const { data: existing } = await supabase
-    .from('nurse_profiles')
-    .select('nursys_transaction_id, nursys_enrolled_at')
-    .eq('id', nurseProfileId)
-    .single()
-
-  const alreadyEnrolled = Boolean(
-    (existing as { nursys_transaction_id?: string | null; nursys_enrolled_at?: string | null } | null)?.nursys_transaction_id ||
-    (existing as { nursys_transaction_id?: string | null; nursys_enrolled_at?: string | null } | null)?.nursys_enrolled_at
-  )
-  const action: 'A' | 'U' = alreadyEnrolled ? 'U' : 'A'
-
+  // Per spec A.7, SubmissionActionCode 'A' covers BOTH adding a new nurse and
+  // updating an already-enrolled one — there is no separate 'U' code (NCSBN
+  // coerces any invalid value back to 'A'). So re-verification of an existing
+  // enrollment is just another 'A'.
   const request: ManageNurseListRequest = {
-    SubmissionActionCode: action,
+    SubmissionActionCode: 'A',
     JurisdictionAbbreviation: licenseState,
     LicenseNumber: licenseNumber || '',
     LicenseType: licenseType,
@@ -170,6 +188,9 @@ export async function GET(req: NextRequest) {
   }
 
   const supabase = await createClient()
+  const denied = await requireProfileOwner(supabase, nurseProfileId)
+  if (denied) return denied
+
   const { data: profile } = await supabase
     .from('nurse_profiles')
     .select('*')

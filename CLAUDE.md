@@ -40,7 +40,7 @@ Three user roles live in `public.users.role`: `nurse`, `hospital`, `admin`. Each
 2. Redirects unauthenticated users hitting `/nurse|/hospital|/admin` to `/auth/login`.
 3. Redirects already-logged-in users hitting `/auth/*` to their role's dashboard (`/nurse/dashboard` for nurses, `/hospital/dashboard` otherwise) by reading `users.role`.
 
-If you add a new protected top-level segment, update the `protectedNursePaths` / `protectedHospitalPaths` / `protectedAdminPaths` arrays in `middleware.ts` — the matcher in `proxy.ts` only excludes static assets.
+If you add a new protected top-level segment, update the `protectedNursePaths` / `protectedHospitalPaths` / `protectedAdminPaths` arrays in `middleware.ts` — the matcher in `proxy.ts` only excludes static assets. The inverse also exists: a `publicPaths` allowlist (currently `['/nurse/jobs']`) carves the **public job board** out of the protected `/nurse` tree so anonymous visitors can browse and deep-link jobs. Marketing/legal pages (`/`, `/about`, `/contact`, `/terms`, `/privacy`, `/hipaa`) and the anonymized share pages (`/share/[slug]`, `/share/credential/[slug]`) live outside the protected trees and need no auth.
 
 ## Supabase: four clients, do not mix
 
@@ -115,6 +115,17 @@ Critical invariant: Phase 2 fails closed — if NCSBN returns licenses but none 
 **Password rotation.** `lib/nursys.ts` reads env vars at call time (not at import) so `/api/nursys/change-password` can rotate the Nursys password without a process restart.
 
 **Admin surface.** `/admin/nursys` (page + `NursysAdminTools.tsx`) wraps four admin-only endpoints: `POST/GET /api/nursys/notifications` (manual backfill of the notification sweep — same logic as the cron, but for arbitrary date windows), `GET /api/nursys/documents?ids=…` (discipline/board docs, max 5 IDs/call, also accessible to `hospital`), `POST /api/nursys/remove`, and `POST /api/nursys/change-password`.
+
+## Ledger: AI pay-package extraction + contract diffing
+
+The other large subsystem (`src/lib/ledger/*` + `src/app/api/ledger/*` + nurse-facing pages under `/nurse/*`). It is independent of the hospital↔nurse marketplace flow: it helps a travel nurse capture recruiter quotes, compare them against the signed contract, and rate recruiters/agencies. Every `ledger_*` table is RLS-scoped to the owning nurse (hospitals get read-only on placement-linked rows; admins full access) — route handlers gate with `requireAuth()` from `lib/ledger/access.ts` and helpers like `loadContractForOwner`.
+
+- **LLM extraction (`extractor.ts`).** `extractPayPackage()` calls the Anthropic SDK (`@anthropic-ai/sdk`, `ANTHROPIC_API_KEY`) with a forced tool call (`submit_pay_package`) and validates the result against `PayPackageSchema` (Zod, `types.ts`). Models are pinned in `LEDGER_MODELS` (`extract: claude-sonnet-4-6`, `diff: claude-haiku-4-5-...`). All money is integer **cents**. Retries with backoff on rate limits; sets `needsReview` when `extraction_confidence < 0.6`. Every call is logged to `ledger_llm_calls` (token + latency) for admin cost tracking — don't drop the `onCall`/log plumbing. The system prompt + few-shots in `prompts.ts` encode domain rules (one-time vs weekly travel pay, blended vs taxable overtime basis, net-pay ranges); update them together with the schema.
+- **Ingestion webhooks.** Recruiter messages arrive via `/api/ledger/webhooks/postmark` (inbound email, Basic-auth verified against `POSTMARK_INBOUND_SECRET`) and `/api/ledger/webhooks/twilio` (inbound SMS, HMAC-SHA1 signature verified with `TWILIO_AUTH_TOKEN`). Both verifiers live in `webhook-verify.ts` and use `timingSafeEqual` — keep them constant-time. Contracts can also be built from a PDF via `/api/ledger/contracts/from-pdf`.
+- **Quote vs signed diff.** `/api/ledger/contracts/[id]/diff` runs `diff.ts` to compare the extracted quote(s) against the signed contract field-by-field (text + categorical deltas), persisting to `ledger_diffs`.
+- **Anonymized public shares.** `/api/ledger/contracts/[id]/share` and `.../credentials/[id]/share` mint slugs in `ledger_share_links` / `credential_share_links`, served publicly at `/share/[slug]` and `/share/credential/[slug]`. `anonymize.ts` redacts agency/recruiter/facility names to stable `AGY-/REC-/FAC-` SHA-256 hash labels before anything leaves the owner's account — run shared payloads through it.
+- **Credentials vault.** `credentials/*` manages a nurse's certs (BLS/ACLS/PALS/etc.). AHA-issued certs are machine-verifiable via `/api/ledger/credentials/[id]/verify` when `AHA_API_KEY` + `AHA_API_BASE_URL` are set (`credentials/aha.ts`, falls through gracefully otherwise). A daily cron `/api/ledger/credentials/cron/expiry-reminders` emails upcoming expirations.
+- **Tax-home tracker.** `lib/taxhome/compute.ts` + `/nurse/tax-home` + `/api/ledger/tax-home/*` count days-in-state across contract windows to flag IRS tax-home risk (`safe`/`warning`/`risk`). Pure function, well unit-tested — see `tests/taxhome/compute.test.ts`.
 
 ## Stripe: platform fee + escrow + tiered cancellation
 

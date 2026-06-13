@@ -11,7 +11,9 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "extract": "tsx --env-file=.env.local scripts/extract.ts",
-    "seed:test": "tsx --env-file=.env.local scripts/seed-test-accounts.ts"
+    "seed:test": "tsx --env-file=.env.local scripts/seed-test-accounts.ts",
+    "nursys:ping": "tsx --env-file=.env.local scripts/nursys-ping.ts",
+    "nursys:rotate": "tsx --env-file=.env.local scripts/nursys-rotate.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.96.0",

@@ -133,8 +133,9 @@ function VerifyLicenseInner() {
       return
     }
     const birthYearNum = parseInt(form.birthYear, 10)
-    if (!birthYearNum || birthYearNum < 1900 || birthYearNum > new Date().getFullYear() - 15) {
-      setError('Enter a valid 4-digit birth year')
+    // Spec A.7: birth year must be more than 16 years before the current year.
+    if (!birthYearNum || birthYearNum < 1900 || new Date().getFullYear() - birthYearNum <= 16) {
+      setError('Enter a valid 4-digit birth year (must be more than 16 years ago)')
       setSubmitting(false)
       return
     }
@@ -293,13 +294,15 @@ function VerifyLicenseInner() {
               <div className="grid grid-cols-2 gap-4">
                 <Select label="License type" value={form.licenseType}
                   onChange={e => update('licenseType', e.target.value)} required placeholder="Select type"
+                  // Codes must match Nursys spec Appendix A.2 exactly, or
+                  // enrollment fails with error 4 (Invalid License Type).
                   options={[
                     { value: 'RN', label: 'RN — Registered Nurse' },
-                    { value: 'LPN', label: 'LPN — Licensed Practical Nurse' },
-                    { value: 'NP', label: 'NP — Nurse Practitioner' },
-                    { value: 'CRNA', label: 'CRNA' },
-                    { value: 'CNA', label: 'CNA' },
-                    { value: 'HHA', label: 'HHA' },
+                    { value: 'PN', label: 'PN — Practical / Vocational Nurse (LPN/LVN)' },
+                    { value: 'CNP', label: 'CNP — Certified Nurse Practitioner' },
+                    { value: 'CNS', label: 'CNS — Clinical Nurse Specialist' },
+                    { value: 'CNM', label: 'CNM — Certified Nurse Midwife' },
+                    { value: 'CRNA', label: 'CRNA — Certified Registered Nurse Anesthetist' },
                   ]} />
                 <Input label="NCSBN ID (optional)" value={form.ncsbnId}
                   onChange={e => update('ncsbnId', e.target.value)} placeholder="99912345" />

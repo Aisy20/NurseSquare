@@ -12,10 +12,14 @@ import { SPECIALTIES, US_STATES } from '@/lib/utils'
 import { Logo } from '@/components/layout/Navbar'
 import { ArrowLeft, ArrowRight, Upload, CheckCircle } from 'lucide-react'
 
+// Nursys-verifiable codes (nursys: true) must match spec Appendix A.2 exactly.
+// CNA/HHA are aides — not board-licensed, so they're never sent to Nursys.
 const LICENSE_TYPES = [
   { value: 'RN', label: 'RN — Registered Nurse', nursys: true },
-  { value: 'LPN', label: 'LPN — Licensed Practical Nurse', nursys: true },
-  { value: 'NP', label: 'NP — Nurse Practitioner', nursys: true },
+  { value: 'PN', label: 'PN — Practical / Vocational Nurse (LPN/LVN)', nursys: true },
+  { value: 'CNP', label: 'CNP — Certified Nurse Practitioner', nursys: true },
+  { value: 'CNS', label: 'CNS — Clinical Nurse Specialist', nursys: true },
+  { value: 'CNM', label: 'CNM — Certified Nurse Midwife', nursys: true },
   { value: 'CRNA', label: 'CRNA — Certified Registered Nurse Anesthetist', nursys: true },
   { value: 'CNA', label: 'CNA — Certified Nursing Assistant', nursys: false },
   { value: 'HHA', label: 'HHA — Home Health Aide', nursys: false },
