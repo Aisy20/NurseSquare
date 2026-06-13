@@ -1,0 +1,26 @@
+name: cron - nursys notifications
+
+# Replaces the vercel.json cron after moving to DigitalOcean App Platform
+# (App Platform has no built-in scheduler). Same schedule as the old
+# vercel.json entry: daily at 06:00 UTC.
+#
+# Requires two repo settings (Settings → Secrets and variables → Actions):
+#   - Variable PROD_BASE_URL  e.g. https://nursesquare.com  (no trailing slash)
+#   - Secret   CRON_SECRET    same value as the app's CRON_SECRET env var
+#
+# The endpoint is a GET guarded by `Authorization: Bearer ${CRON_SECRET}`.
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch: {}        # allow manual runs from the Actions tab
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger nursys notification sweep
+        run: |
+          curl -fsS --max-time 120 \
+            "${{ vars.PROD_BASE_URL }}/api/nursys/cron/check-notifications" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
