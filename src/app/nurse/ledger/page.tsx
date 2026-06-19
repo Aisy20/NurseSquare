@@ -49,7 +49,10 @@ export default async function NurseLedgerPage() {
           titleAccent="before you sign."
           subtitle="Paste recruiter quotes or upload offer PDFs. NurseSquare extracts the structured pay package, then diffs it against your signed contract so the gap shows up before payroll does."
           actions={
-            <Link href="/nurse/ledger/new"><Button variant="tang" size="md">New contract</Button></Link>
+            <div className="flex gap-2">
+              <Link href="/nurse/contract-check"><Button variant="primary" size="md">Contract Check</Button></Link>
+              <Link href="/nurse/ledger/new"><Button variant="tang" size="md">New contract</Button></Link>
+            </div>
           }
         />
 

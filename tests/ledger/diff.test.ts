@@ -33,6 +33,7 @@ const BASE: PayPackage = {
   floating_policy: null,
   overtime_rate_cents: 6000,
   overtime_basis: 'taxable_hourly',
+  bill_rate_cents: null,
   holiday_pay: '1.5x for federal holidays worked.',
   required_credentials: ['BLS', 'ACLS', 'CCRN'],
   extraction_confidence: 0.9,

@@ -31,6 +31,7 @@ export const PayPackageSchema = z.object({
   floating_policy: z.string().nullable().default(null),
   overtime_rate_cents: z.number().int().nullable(),
   overtime_basis: z.enum(['taxable_hourly', 'blended', 'unknown']).nullable().default(null),
+  bill_rate_cents: z.number().int().nullable().default(null),
   holiday_pay: z.string().nullable(),
   required_credentials: z.array(z.string()).default([]),
   extraction_confidence: z.number().min(0).max(1),

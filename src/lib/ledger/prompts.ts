@@ -6,6 +6,10 @@ BONUSES: Capture sign-on, completion, extension (paid if the traveler extends th
 
 OVERTIME BASIS: overtime_basis = 'taxable_hourly' when the doc states 1.5x the taxable wage only. 'blended' when it states 1.5x the blended or combined rate (taxable plus stipends, which yields a much higher rate, e.g. ~$67 for a $32 base). 'unknown' if unstated.
 
+BILL RATE: bill_rate_cents is the hourly rate the agency bills the facility for the nurse (e.g. "bill rate $95/hr", "facility rate", "client rate"). It is almost always higher than the nurse's blended take. Capture it only when explicitly stated; recruiters frequently omit it, so leave it null when absent rather than inferring it from the pay package.
+
+DOMAIN CONTEXT (do not fabricate values from these rules, only use them to judge completeness and confidence): a healthy package discloses a taxable base, an itemized stipend breakdown, and ideally the bill rate. Be wary of — and reflect in raw_notes when present — a suspiciously low taxable base paired with inflated stipends (tax-home risk), weekly housing or meals stipends that exceed the GSA per-diem ceiling for the assignment locality, and a single blended or gross figure quoted with no component breakdown. These are scored downstream by deterministic rules; your job is only accurate extraction.
+
 NET PAY RANGES: If the source gives a range (e.g. "$2,420 to $2,520"), populate weekly_net_estimate_cents_low and _high. Leave weekly_net_estimate_cents null. For hourly-rate ranges, use the midpoint for taxable_hourly_rate_cents and note this in raw_notes.
 
 POLICIES: call_off_policy captures the rules around shift cancellations by the facility (e.g. "1 free cancel per 4-week period"). floating_policy captures which units the traveler may be floated to.
@@ -57,6 +61,7 @@ export const FEW_SHOTS: FewShot[] = [
       floating_policy: null,
       overtime_rate_cents: null,
       overtime_basis: null,
+      bill_rate_cents: null,
       holiday_pay: null,
       required_credentials: [],
       extraction_confidence: 0.55,
@@ -82,6 +87,7 @@ Pleased to extend the following offer for a 13-week ER assignment at South Bay R
 - Completion bonus: $2,000
 - OT after 40 hrs at $57/hr
 - Holiday pay: 1.5x for federal holidays worked
+- Bill rate to facility: $92/hr
 - Cancellation: 7 days written notice required on either side
 - Required: BLS, ACLS, NIHSS
 
@@ -120,10 +126,11 @@ Mark`,
       floating_policy: null,
       overtime_rate_cents: 5700,
       overtime_basis: 'taxable_hourly',
+      bill_rate_cents: 9200,
       holiday_pay: '1.5x for federal holidays worked',
       required_credentials: ['BLS', 'ACLS', 'NIHSS'],
       extraction_confidence: 0.92,
-      raw_notes: 'Hourly range $36-$40 stated; using starting rate $38. OT $57 = 1.5x taxable $38.',
+      raw_notes: 'Hourly range $36-$40 stated; using starting rate $38. OT $57 = 1.5x taxable $38. Bill rate $92/hr disclosed.',
     },
   },
   {
@@ -176,6 +183,7 @@ Required credentials on first day: BLS, ACLS, NIHSS, fit test, drug screen clear
       floating_policy: null,
       overtime_rate_cents: 5700,
       overtime_basis: 'taxable_hourly',
+      bill_rate_cents: null,
       holiday_pay: 'Holidays worked paid at 1.5x base',
       required_credentials: ['BLS', 'ACLS', 'NIHSS'],
       extraction_confidence: 0.95,
@@ -236,6 +244,7 @@ Required: BLS, ACLS, CCRN (preferred)`,
       floating_policy: 'May float to PCU and Step-Down at comparable acuity.',
       overtime_rate_cents: 6780,
       overtime_basis: 'blended',
+      bill_rate_cents: null,
       holiday_pay: '1.5x taxable on federal holidays.',
       required_credentials: ['BLS', 'ACLS'],
       extraction_confidence: 0.95,

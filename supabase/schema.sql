@@ -996,3 +996,51 @@ WITH (security_invoker = false) AS
 
 GRANT SELECT ON public_employers TO anon, authenticated;
 
+-- ============================================================
+-- CONTRACT CHECK v0 (see migration 0004_contract_check.sql)
+-- ============================================================
+-- bill_rate_capture: latest quote's blended hourly rate / disclosed bill rate
+-- (a fraction; NULL when the bill rate was never disclosed). Red flags are
+-- computed on read, not stored.
+ALTER TABLE ledger_contracts
+  ADD COLUMN IF NOT EXISTS bill_rate_capture NUMERIC(5,4);
+
+-- gsa_per_diem_rates: locality lodging + M&IE ceilings for the "stipend over
+-- GSA per-diem" red flag. locality = '*' is a state default; state = '*' is the
+-- CONUS standard fallback. Matched on the assignment city, then state default,
+-- then CONUS standard. Seed values are representative FY2026 figures — refresh
+-- annually from https://www.gsa.gov/travel/plan-book/per-diem-rates.
+CREATE TABLE IF NOT EXISTS gsa_per_diem_rates (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  fiscal_year INT NOT NULL,
+  state CHAR(2) NOT NULL,
+  locality TEXT NOT NULL,
+  lodging_cents INT NOT NULL,
+  mie_cents INT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (fiscal_year, state, locality)
+);
+
+ALTER TABLE gsa_per_diem_rates ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Authenticated can read GSA per-diem rates" ON gsa_per_diem_rates;
+CREATE POLICY "Authenticated can read GSA per-diem rates" ON gsa_per_diem_rates
+  FOR SELECT USING (auth.role() = 'authenticated');
+
+INSERT INTO gsa_per_diem_rates (fiscal_year, state, locality, lodging_cents, mie_cents) VALUES
+  (2026, '*',  '*',              11000, 6800),
+  (2026, 'CA', 'San Francisco',  25800, 9200),
+  (2026, 'CA', 'Los Angeles',    18200, 8000),
+  (2026, 'NY', 'New York',       29000, 9200),
+  (2026, 'TX', 'Austin',         13700, 8000),
+  (2026, 'TX', 'Houston',        12300, 8000),
+  (2026, 'TX', 'Dallas',         14500, 8000),
+  (2026, 'FL', 'Miami',          19000, 8000),
+  (2026, 'IL', 'Chicago',        21000, 8000),
+  (2026, 'WA', 'Seattle',        19500, 8600),
+  (2026, 'MA', 'Boston',         26000, 9200),
+  (2026, 'AZ', 'Phoenix',        13500, 8000),
+  (2026, 'CO', 'Denver',         19900, 8000),
+  (2026, 'DC', 'Washington',     25700, 9200)
+ON CONFLICT (fiscal_year, state, locality) DO NOTHING;
+
