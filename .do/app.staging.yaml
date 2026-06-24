@@ -1,0 +1,72 @@
+# DigitalOcean App Platform spec — STAGING.
+#
+# A pre-prod smoke environment that mirrors the prod build but points at the
+# DEV Supabase project + Stripe TEST keys, and omits Nursys creds so the dev
+# fallback runs (no billable NCSBN calls from staging).
+#
+#   doctl apps create --spec .do/app.staging.yaml
+#
+# Deploys the `staging` branch. Set real (dev/test) secret values in the DO
+# dashboard — the REPLACE_ME placeholders here are never committed as secrets.
+name: nursesquare-staging
+region: nyc
+services:
+  - name: web
+    github:
+      repo: Aisy20/NurseSquare
+      branch: staging          # create this branch; promote to main for prod
+      deploy_on_push: true
+    build_command: npm run build
+    run_command: npm run start
+    environment_slug: node-js
+    instance_size_slug: basic-xs
+    instance_count: 1
+    http_port: 3000
+    health_check:
+      http_path: /
+    envs:
+      # --- Public (BUILD time) — point at the DEV Supabase + Stripe TEST ---
+      - key: NEXT_PUBLIC_APP_URL
+        scope: RUN_AND_BUILD_TIME
+        value: ${APP_URL}
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        scope: RUN_AND_BUILD_TIME
+        value: REPLACE_ME        # DEV project URL
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        scope: RUN_AND_BUILD_TIME
+        value: REPLACE_ME        # DEV anon key
+      - key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+        scope: RUN_AND_BUILD_TIME
+        value: REPLACE_ME        # pk_test_...
+
+      # --- Server config ---
+      # Nursys intentionally OMITTED so nursysConfigured() is false -> dev
+      # fallback. Add real creds only if you have a non-billable NCSBN test
+      # arrangement.
+
+      # --- Server secrets (DEV/TEST values; set in dashboard) ---
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        scope: RUN_TIME
+        type: SECRET
+        value: REPLACE_ME        # DEV service_role key
+      - key: STRIPE_SECRET_KEY
+        scope: RUN_TIME
+        type: SECRET
+        value: REPLACE_ME        # sk_test_...
+      - key: STRIPE_WEBHOOK_SECRET
+        scope: RUN_TIME
+        type: SECRET
+        value: REPLACE_ME        # TEST-mode webhook secret
+      - key: RESEND_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+        value: REPLACE_ME        # dev key / restricted sending
+      - key: CRON_SECRET
+        scope: RUN_TIME
+        type: SECRET
+        value: REPLACE_ME        # distinct from prod
+      - key: ANTHROPIC_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+        value: REPLACE_ME
+      # Postmark/Twilio/Checkr/AHA optional — add if you exercise them in staging.
